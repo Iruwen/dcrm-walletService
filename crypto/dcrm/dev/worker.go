@@ -1183,6 +1183,7 @@ func DcrmCall(msg interface{},enode string) <-chan string {
     RpcReqQueue <- req
     chret,tip,cherr := GetChannelValue(sendtogroup_timeout,rch)
     if cherr != nil {
+	fmt.Println("==================DcrmCall,rr.MsgType =%s,chret =%s,cherr =%v=====================",rr.MsgType,chret,cherr)
 	////
 	if rr.MsgType == "rpc_lockout" {
 	}
@@ -1196,6 +1197,7 @@ func DcrmCall(msg interface{},enode string) <-chan string {
 	return ch
     }
 
+    fmt.Println("==================DcrmCall,rr.MsgType =%s,chret =%s,cherr =%v=====================",rr.MsgType,chret,cherr)
     //success:chret
     ret := ("success"+Sep+chret)
     ch <- ret 
@@ -1206,6 +1208,7 @@ func DcrmCallRet(msg interface{},enode string) {
 
     //msg = success:workid:msgtype:ret  or fail:workid:msgtype:tip:error
     res := msg.(string)
+    fmt.Println("============================!!!!!! DcrmCallRet, res = %s !!!!!!! =========================",res)
     if res == "" {
 	return
     }
@@ -1230,6 +1233,9 @@ func DcrmCallRet(msg interface{},enode string) {
 
     //msgtype := ss[2]
     fmt.Println("=========DcrmCallRet, ret = %s,len(ret) = %v ==============",ss[3],len(ss[3]))
+    ////for test only
+    //////////
+
     workid,err := strconv.Atoi(ss[1])
     if err != nil || workid < 0 || workid >= RpcMaxWorker {
 	return
@@ -2676,12 +2682,14 @@ func (self *RecvMsg) Run(workid int,ch chan interface{}) bool {
 	    dcrm_genPubKey(w.sid,msgs[0],msgs[1],rch, msgs[5],msgs[3])
 	    chret,tip,cherr := GetChannelValue(ch_t,rch)
 	    if cherr != nil {
+		fmt.Println("===================RecvMsg.Run,dcrm_genPubKey err =%v=====================",cherr)
 		AcceptReqAddr(msgs[0],msgs[1],msgs[2],msgs[3],msgs[4],msgs[5],false,"","Failure","",tip,cherr.Error(),"",wid)
 		res2 := RpcDcrmRes{Ret:strconv.Itoa(rr.WorkId)+Sep+rr.MsgType,Tip:tip,Err:cherr}
 		ch <- res2
 		return false
 	    }
 	    
+	    fmt.Println("===================RecvMsg.Run,dcrm_genPubKey success,chret =%s=====================",chret)
 	    res2 := RpcDcrmRes{Ret:strconv.Itoa(rr.WorkId)+Sep+rr.MsgType+Sep+chret,Tip:"",Err:nil}
 	    ch <- res2
 	    return true

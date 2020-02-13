@@ -243,6 +243,7 @@ func dcrm_genPubKey(msgprex string,account string,cointype string,ch chan interf
     
     ok := KeyGenerate_DECDSA(msgprex,ch,id,cointype)
     if ok == false {
+	fmt.Println("===============dcrm_genPubKey,KeyGenerate_DECDSA fail.===============",)
 	return
     }
 
@@ -1768,6 +1769,7 @@ func DECDSAGenKeyRoundFour(msgprex string,ch chan interface{},w *RpcReqWorker) (
     // for u1
     u1NtildeH1H2 := DECDSA_Key_GenerateNtildeH1H2(NtildeLength)
     if u1NtildeH1H2 == nil {
+	fmt.Println("=====================gen ntilde h1 h2 fail=======================")
 	res := RpcDcrmRes{Ret:"",Err:fmt.Errorf("gen ntilde h1 h2 fail.")}
 	ch <- res
 	return nil,false 
@@ -1787,6 +1789,7 @@ func DECDSAGenKeyRoundFour(msgprex string,ch chan interface{},w *RpcReqWorker) (
     // u1zkFactProof, u2zkFactProof, u3zkFactProof, u4zkFactProof, u5zkFactProof
     _,tip,cherr := GetChannelValue(ch_t,w.bzkfact)
     if cherr != nil {
+	fmt.Println("=====================reciv ntilde h1 h2 fail=======================")
 	res := RpcDcrmRes{Ret:"",Tip:tip,Err:GetRetErr(ErrGetZKFACTPROOFTimeout)}
 	ch <- res
 	return nil,false
@@ -2031,6 +2034,7 @@ func KeyGenerate_DECDSA(msgprex string,ch chan interface{},id int,cointype strin
 
     u1NtildeH1H2,status := DECDSAGenKeyRoundFour(msgprex,ch,w)
     if status != true {
+	fmt.Println("===============generate key,round four fail.=================",)
 	return false
     }
     fmt.Println("=================generate key,round four finish===================")

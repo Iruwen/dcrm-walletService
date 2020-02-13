@@ -64,7 +64,8 @@ func GetReqAddrNonce(account string) (string,string,error) {
     ///////
     if exsit == false {
 	fmt.Println("==============GetReqAddrNonce,no exsit,key =%s=================",key2)
-	return "","dcrm back-end internal error:get req addr nonce from db fail",fmt.Errorf("map not found, account = %s",account)
+	//return "","dcrm back-end internal error:get req addr nonce from db fail",fmt.Errorf("map not found, account = %s",account)
+	return "0","",nil
     }
 
     nonce,_ := new(big.Int).SetString(string(da),10)

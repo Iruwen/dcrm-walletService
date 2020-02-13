@@ -381,21 +381,26 @@ func (t *udp) udpSendMsg(toid NodeID, toaddr *net.UDPAddr, msg string, number [3
 				fmt.Printf("====  (t *udp) udpSendMsg()  ====, send toaddr: %v, err: timeout\n", toaddr)
 				break
 			}
+			con := false
 			errc := t.pending(toid, byte(Ack_Packet), func(r interface{}) bool {
 				fmt.Printf("recv ack ====  (t *udp) udpSendMsg()  ====, from: %v, sequence: %v, ackSequence: %v\n", toaddr, s, r.(*Ack).Sequence)
-				return true
+				if s == r.(*Ack).Sequence {
+					con = true
+					return true
+				}
+				return false
 			})
 			var errs error
 			if ret == true {
 				_, errs = t.send(toaddr, byte(getPacket), req)
-				fmt.Printf("==== (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, errs: %v, dcrmmessage\n", toaddr, s, errs)
+				fmt.Printf("==== (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, errs: %v, ret dcrmmessage\n", toaddr, s, errs)
 			} else {
 				_, errs = t.send(toaddr, byte(getPacket), reqGet)
 				fmt.Printf("==== (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, errs: %v, getdcrmmessage\n", toaddr, s, errs)
 			}
 			time.Sleep(time.Duration(5) * time.Second)
 			err := <-errc
-			if errs != nil || err != nil {
+			if errs != nil || err != nil || con == false {
 			        continue
 			}
 			fmt.Printf("====  (t *udp) udpSendMsg()  ====, send toaddr: %v, SUCCESS\n", toaddr)
@@ -431,20 +436,21 @@ func (t *udp) sendToGroupCC(toid NodeID, toaddr *net.UDPAddr, msg string, p2pTyp
                number[2] = 1
 	       _, err = t.udpSendMsg(toid, toaddr, msg, number, p2pType, false)
 		if err != nil {
-			fmt.Printf("==== (t *udp) sendMsgToPeer ====, err: %v\n", err)
+			fmt.Printf("==== (t *udp) sendMsgToPeer ====, toaddr: %v, p2perror: %v\n", toaddr, err)
 		}
        } else if len(msg) > 800 && len(msg) < 1600 {
                number[1] = 1
                number[2] = 2
 	       _, err = t.udpSendMsg(toid, toaddr, msg[0:800], number, p2pType, false)
 		if err != nil {
-			fmt.Printf("==== (t *udp) sendMsgToPeer ====, err: %v\n", err)
+			fmt.Printf("==== (t *udp) sendMsgToPeer ====, toaddr: %v, p2perror: %v\n", toaddr, err)
 		} else {
 			number[1] = 2
 			number[2] = 2
+			time.Sleep(time.Duration(500) * time.Millisecond)
 			_, err = t.udpSendMsg(toid, toaddr, msg[800:], number, p2pType, false)
 			if err != nil {
-				fmt.Printf("==== (t *udp) sendMsgToPeer ====, err: %v\n", err)
+				fmt.Printf("==== (t *udp) sendMsgToPeer ====, toaddr: %v, p2perror: %v\n", toaddr, err)
 			}
 		}
        } else {
@@ -467,7 +473,7 @@ func (req *getdcrmmessage) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac 
                // (which is a much bigger packet than findnode) to the victim.
                return errUnknownNode
        }
-	fmt.Printf("send ack ==== (req *getdcrmmessage) handle() ====, to: %v, mac: %v\n", from, mac)
+	fmt.Printf("send ack ==== (req *getdcrmmessage) handle() ====, to: %v, sequence: %v\n", from, req.Sequence)
 	t.send(from, byte(Ack_Packet), &Ack{
 		Sequence: req.Sequence,
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
@@ -505,8 +511,18 @@ func (req *getdcrmmessage) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac 
        }
 
        go func() {
+		lenm := len(msgp)
+		if lenm >= 100 {
+			lenm = 100
+		}
+		fmt.Printf("p2p callback callMsgEvent(), msgp: %v\n", msgp[:lenm])
                msgc := callMsgEvent(msgp, int(req.P2pType), fromID.String())
                msg := <-msgc
+		lenm = len(msg)
+		if lenm >= 100 {
+			lenm = 100
+		}
+		fmt.Printf("p2p callback send ret: msg: %v\n", msg[:lenm])
 		_, err := t.udpSendMsg(fromID, from, msg, number, int(req.P2pType), true)
 	       if err != nil {
 			fmt.Printf("dcrm handle, send to target: %v, from: %v, msg(len = %v), err: %v\n", fromID, from, len(msg), err)

@@ -131,7 +131,7 @@ func InitDev(keyfile string,groupId string) {
     go SaveReqAddrToDb()
     go SaveLockOutToDb()
 
-    ReSendTimes = 1
+    ReSendTimes = 6
     
     go CommitRpcReq()
     go ec2.GenRandomInt(2048)
@@ -1482,20 +1482,20 @@ func SortCurNodeInfo(value []interface{}) []interface{} {
     }
     
     var ids sortableIDSSlice
-    for k,v := range value {
+    for _,v := range value {
 	uid := DoubleHash(string(v.([]byte)),"ALL")
 	ids = append(ids,uid)
-	fmt.Println("===============SortCurNodeInfo,11111,index =%v,uid =%v,len(v)=%v,================",k,uid,len(string(v.([]byte))))
+	//fmt.Println("===============SortCurNodeInfo,11111,index =%v,uid =%v,len(v)=%v,================",k,uid,len(string(v.([]byte))))
     }
     
     sort.Sort(ids)
 
     var ret = make([]interface{},0)
-    for k,v := range ids {
-	fmt.Println("===============SortCurNodeInfo,ids index=%v,ids uid =%v================",k,v)
-	for kk,vv := range value {
+    for _,v := range ids {
+	//fmt.Println("===============SortCurNodeInfo,ids index=%v,ids uid =%v================",k,v)
+	for _,vv := range value {
 	    uid := DoubleHash(string(vv.([]byte)),"ALL")
-	    fmt.Println("===============SortCurNodeInfo,22222,index =%v,uid =%v,len(vv)=%v,================",kk,uid,len(string(vv.([]byte))))
+	    //fmt.Println("===============SortCurNodeInfo,22222,index =%v,uid =%v,len(vv)=%v,================",kk,uid,len(string(vv.([]byte))))
 	    if v.Cmp(uid) == 0 {
 		ret = append(ret,vv)
 		break
@@ -1510,7 +1510,7 @@ func GetCurNodeReqAddrInfo(geter_acc string) (string,string,error) {
     var ret []string
     _,lmvalue := LdbReqAddr.ListMap()
     ////for test only
-    for kk,vv2 := range lmvalue {
+/*    for kk,vv2 := range lmvalue {
 	fmt.Println("================GetCurNodeReqAddrInfo,TEST,list map index =%v,len(value) =%v ===================",kk,len(string(vv2.([]byte))))
 	vv3 := vv2.([]byte)
 	value := string(vv3)
@@ -1534,7 +1534,7 @@ func GetCurNodeReqAddrInfo(geter_acc string) (string,string,error) {
 	    continue
 	}
 	fmt.Println("================GetCurNodeReqAddrInfo,TEST,ac.Account =%s,ac.Status =%s,ac =%v ===================",ac.Account,ac.Status,ac)
-    }
+    }*/
     /////////////////
 
     lmvalue2 := SortCurNodeInfo(lmvalue)
@@ -1647,7 +1647,7 @@ func GetCurNodeLockOutInfo(geter_acc string) (string,string,error) {
     var ret []string
     _,lmvalue := LdbLockOut.ListMap()
     ////for test only
-    for kk,vv2 := range lmvalue {
+    /*for kk,vv2 := range lmvalue {
 	fmt.Println("================GetCurNodeLockOutInfo,TEST,list map index =%v,len(value) =%v ===================",kk,len(string(vv2.([]byte))))
 	vv3 := vv2.([]byte)
 	value := string(vv3)
@@ -1671,7 +1671,7 @@ func GetCurNodeLockOutInfo(geter_acc string) (string,string,error) {
 	    continue
 	}
 	fmt.Println("================GetCurNodeLockOutInfo,TEST,ac.Account =%s,ac.Status =%s,ac =%v ===================",ac.Account,ac.Status,ac)
-    }
+    }*/
     /////////////////
 
 
@@ -2632,7 +2632,7 @@ func (self *RecvMsg) Run(workid int,ch chan interface{}) bool {
 
 			   ///////
                            timeout <- true
-			   fmt.Println("=========================!!!!!!get all accept result,it is true,so set timeout!!!!!!=================")
+			   fmt.Println("=========================!!!!!!get all accept result,it is true!!!!!!=================")
 	                   return
                        case <-agreeWaitTimeOut.C:
                            fmt.Printf("==== (self *RecvMsg) Run() ====, timerout %v\n", agreeWaitTime)
@@ -2918,7 +2918,7 @@ func (self *ReqAddrSendMsgToDcrm) Run(workid int,ch chan interface{}) bool {
 
     for i:=0;i<ReSendTimes;i++ {
 	SendToGroupAllNodes(self.GroupId,res)
-	time.Sleep(time.Duration(2)*time.Second) //1000 == 1s
+	time.Sleep(time.Duration(3)*time.Second) //1000 == 1s
     }
     /*if err != nil {
 	fmt.Println("=============ReqAddrSendMsgToMsg.Run,send to group all nodes,err =%v ===========",err)
@@ -2990,7 +2990,7 @@ func (self *LockOutSendMsgToDcrm) Run(workid int,ch chan interface{}) bool {
 
     for i:=0;i<ReSendTimes;i++ {
 	SendToGroupAllNodes(self.GroupId,res)
-	time.Sleep(time.Duration(2)*time.Second) //1000 == 1s
+	time.Sleep(time.Duration(3)*time.Second) //1000 == 1s
     }
     /*_,err = SendToGroupAllNodes(self.GroupId,res)
     if err != nil {

@@ -34,7 +34,7 @@ import (
     "github.com/fsn-dev/dcrm-walletService/ethdb"
     "github.com/fsn-dev/dcrm-walletService/coins"
     "github.com/fsn-dev/dcrm-walletService/internal/common"
-    "github.com/fsn-dev/dcrm-walletService/coins/types"
+    "github.com/fsn-dev/dcrm-walletService/coins/tools/types"
     "github.com/fsn-dev/dcrm-walletService/coins/eos"
     "github.com/astaxie/beego/logs"
     "github.com/agl/ed25519"

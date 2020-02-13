@@ -23,7 +23,7 @@ import (
 	"math/big"
 
 	"github.com/fsn-dev/dcrm-walletService/internal/common"
-	"github.com/fsn-dev/dcrm-walletService/coins/types"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/types"
 	"github.com/fsn-dev/dcrm-walletService/crypto"
 	"github.com/fsn-dev/dcrm-walletService/p2p/event"
 )

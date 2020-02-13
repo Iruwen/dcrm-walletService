@@ -35,8 +35,8 @@ import (
 	"github.com/eoscanada/eos-go/token"
 	"github.com/rubblelabs/ripple/crypto"
 
-	rpcutils "github.com/fsn-dev/dcrm-walletService/coins/rpcutils"
-	"github.com/fsn-dev/dcrm-walletService/coins/types"
+	rpcutils "github.com/fsn-dev/dcrm-walletService/coins/tools/rpcutils"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/types"
 
 )
 

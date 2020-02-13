@@ -29,8 +29,8 @@ import (
 	"github.com/fsn-dev/dcrm-walletService/internal/common"
 	"github.com/fsn-dev/dcrm-walletService/coins"
 	"github.com/fsn-dev/dcrm-walletService/coins/eos"
-	"github.com/fsn-dev/dcrm-walletService/coins/types"
-	cryptocoinsconfig "github.com/fsn-dev/dcrm-walletService/coins/config"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/types"
+	cryptocoinsconfig "github.com/fsn-dev/dcrm-walletService/coins/tools/config"
 	"encoding/json"
 	"encoding/hex"
 )

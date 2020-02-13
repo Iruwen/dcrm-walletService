@@ -40,7 +40,7 @@ import (
     "github.com/astaxie/beego/logs"
     "encoding/gob"
     "encoding/hex"
-    "github.com/fsn-dev/dcrm-walletService/coins/types"
+    "github.com/fsn-dev/dcrm-walletService/coins/tools/types"
     "github.com/fsn-dev/dcrm-walletService/internal/common"
 )
 

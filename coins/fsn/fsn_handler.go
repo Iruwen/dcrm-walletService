@@ -31,8 +31,8 @@ import  (
 	ethcrypto "github.com/fsn-dev/dcrm-walletService/crypto"
 	"github.com/fsn-dev/dcrm-walletService/coins/eth/sha3"
 	"github.com/fsn-dev/dcrm-walletService/coins/eth/ethclient"
-	"github.com/fsn-dev/dcrm-walletService/coins/config"
-	ctypes "github.com/fsn-dev/dcrm-walletService/coins/types"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/config"
+	ctypes "github.com/fsn-dev/dcrm-walletService/coins/tools/types"
 )
 
 func FSNInit() {

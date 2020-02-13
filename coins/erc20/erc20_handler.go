@@ -34,14 +34,14 @@ import  (
 	ethcrypto "github.com/fsn-dev/dcrm-walletService/crypto"
 	"github.com/fsn-dev/dcrm-walletService/coins/eth/ethclient"
 
-	"github.com/fsn-dev/dcrm-walletService/coins/config"
-	rpcutils "github.com/fsn-dev/dcrm-walletService/coins/rpcutils"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/config"
+	rpcutils "github.com/fsn-dev/dcrm-walletService/coins/tools/rpcutils"
 
 	ethhandler "github.com/fsn-dev/dcrm-walletService/coins/eth"
 	"github.com/fsn-dev/dcrm-walletService/coins/eth/sha3"
 	"github.com/fsn-dev/dcrm-walletService/coins/erc20/token"
 	"github.com/fsn-dev/dcrm-walletService/coins/erc20/abi"
-	ctypes "github.com/fsn-dev/dcrm-walletService/coins/types"
+	ctypes "github.com/fsn-dev/dcrm-walletService/coins/tools/types"
 )
 
 func ERC20Init() {

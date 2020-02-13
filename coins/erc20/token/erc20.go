@@ -22,7 +22,7 @@ import (
 
 	"github.com/fsn-dev/dcrm-walletService/coins/erc20/abi"
 	"github.com/fsn-dev/dcrm-walletService/internal/common"
-	"github.com/fsn-dev/dcrm-walletService/coins/types"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/types"
 	"github.com/fsn-dev/dcrm-walletService/p2p/event"
 )
 

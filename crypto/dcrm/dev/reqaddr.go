@@ -28,7 +28,7 @@ import (
     "strings"
     "github.com/fsn-dev/dcrm-walletService/crypto/dcrm/dev/lib/ed"
     "github.com/fsn-dev/dcrm-walletService/internal/common"
-    "github.com/fsn-dev/dcrm-walletService/coins/types"
+    "github.com/fsn-dev/dcrm-walletService/coins/tools/types"
     cryptorand "crypto/rand"
     "crypto/sha512"
     "encoding/hex"

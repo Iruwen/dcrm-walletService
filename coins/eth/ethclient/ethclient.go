@@ -29,7 +29,7 @@ import (
 	"github.com/fsn-dev/dcrm-walletService/internal/common/hexutil"
 	"github.com/fsn-dev/dcrm-walletService/p2p/rlp"
 	"github.com/fsn-dev/dcrm-walletService/rpc"
-	"github.com/fsn-dev/dcrm-walletService/coins/types"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/types"
 )
 
 // Client defines typed wrappers for the Ethereum RPC API.

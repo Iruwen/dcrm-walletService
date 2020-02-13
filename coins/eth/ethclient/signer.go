@@ -21,7 +21,7 @@ import (
 	"math/big"
 
 	"github.com/fsn-dev/dcrm-walletService/internal/common"
-	"github.com/fsn-dev/dcrm-walletService/coins/types"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/types"
 )
 
 // senderFromServer is a types.Signer that remembers the sender address returned by the RPC

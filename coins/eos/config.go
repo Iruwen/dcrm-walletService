@@ -18,7 +18,7 @@ package eos
 import (
 	eos "github.com/eoscanada/eos-go"
 
-	"github.com/fsn-dev/dcrm-walletService/coins/config"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/config"
 )
 
 func EOSConfigInit() {

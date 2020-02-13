@@ -19,11 +19,11 @@ package btc
 import (
 	"fmt"
 	"encoding/json"
-	rpcutils "github.com/fsn-dev/dcrm-walletService/coins/rpcutils"
+	rpcutils "github.com/fsn-dev/dcrm-walletService/coins/tools/rpcutils"
 	"math/big"
 	"runtime/debug"
 	"github.com/btcsuite/btcd/btcjson"
-	"github.com/fsn-dev/dcrm-walletService/coins/config"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/config"
 	"sort"
 )
 

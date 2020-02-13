@@ -25,9 +25,9 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcutil"
 	"github.com/fsn-dev/dcrm-walletService/coins/btc"
-	"github.com/fsn-dev/dcrm-walletService/coins/config"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/config"
 	addrconv "github.com/schancel/cashaddr-converter/address"
-	"github.com/fsn-dev/dcrm-walletService/coins/types"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/types"
 	"strings"
 )
 

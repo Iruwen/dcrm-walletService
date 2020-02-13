@@ -20,7 +20,7 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/fsn-dev/dcrm-walletService/coins/types"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/types"
 
 	"github.com/fsn-dev/dcrm-walletService/coins/btc"
 	"github.com/fsn-dev/dcrm-walletService/coins/eth"
@@ -35,7 +35,7 @@ import (
 	"github.com/fsn-dev/dcrm-walletService/coins/bnb"
 	"github.com/fsn-dev/dcrm-walletService/coins/fsn"
 
-	config "github.com/fsn-dev/dcrm-walletService/coins/config"
+	config "github.com/fsn-dev/dcrm-walletService/coins/tools/config"
 )
 
 var Coinmap map[string]string = make(map[string]string)

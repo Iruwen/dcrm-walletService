@@ -17,7 +17,7 @@ import (
 	"github.com/fsn-dev/dcrm-walletService/coins/eos"
 	"github.com/fsn-dev/dcrm-walletService/coins/bnb"
 	api "github.com/fsn-dev/dcrm-walletService/coins"
-	"github.com/fsn-dev/dcrm-walletService/coins/config"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/config"
 )
 
 func init() {

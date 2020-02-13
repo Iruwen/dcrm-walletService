@@ -35,10 +35,10 @@ import (
 	"github.com/btcsuite/btcwallet/wallet/txauthor"
 	"github.com/btcsuite/btcwallet/wallet/txrules"
 
-	rpcutils "github.com/fsn-dev/dcrm-walletService/coins/rpcutils"
+	rpcutils "github.com/fsn-dev/dcrm-walletService/coins/tools/rpcutils"
 	"github.com/fsn-dev/dcrm-walletService/coins/btc"
-	"github.com/fsn-dev/dcrm-walletService/coins/config"
-	"github.com/fsn-dev/dcrm-walletService/coins/types"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/config"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/types"
 )
 
 /*

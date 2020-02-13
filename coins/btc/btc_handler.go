@@ -43,9 +43,9 @@ import (
 	"github.com/btcsuite/btcwallet/wallet/txrules"
 
 	"github.com/fsn-dev/dcrm-walletService/crypto"
-	rpcutils "github.com/fsn-dev/dcrm-walletService/coins/rpcutils"
-	"github.com/fsn-dev/dcrm-walletService/coins/config"
-	"github.com/fsn-dev/dcrm-walletService/coins/types"
+	rpcutils "github.com/fsn-dev/dcrm-walletService/coins/tools/rpcutils"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/config"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/types"
 )
 
 func BTCInit() {

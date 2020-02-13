@@ -31,9 +31,9 @@ import (
 	"github.com/rubblelabs/ripple/crypto"
 	"github.com/rubblelabs/ripple/data"
 
-	"github.com/fsn-dev/dcrm-walletService/coins/config"
-	rpcutils "github.com/fsn-dev/dcrm-walletService/coins/rpcutils"
-	"github.com/fsn-dev/dcrm-walletService/coins/types"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/config"
+	rpcutils "github.com/fsn-dev/dcrm-walletService/coins/tools/rpcutils"
+	"github.com/fsn-dev/dcrm-walletService/coins/tools/types"
 )
 
 func XRPInit() {

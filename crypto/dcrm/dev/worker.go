@@ -2161,6 +2161,36 @@ func (self *RecvMsg) Run(workid int,ch chan interface{}) bool {
 	    wid = workid
 	    
 	    //nonce check
+	    if rr.MsgType == "rpc_req_dcrmaddr" {
+		msgs := strings.Split(rr.Msg,":")
+		//nonce check
+		cur_nonce_str,_,err := GetReqAddrNonce(msgs[0])
+		if err != nil {
+		    //TODO must set acceptreqaddr(.....)
+		    res2 := RpcDcrmRes{Ret:"",Tip:"dcrm back-end internal error:get req addr nonce fail in RecvMsg.Run",Err:fmt.Errorf("get req addr nonce fail in recvmsg.run")}
+		    ch <- res2
+		    return false
+		}
+
+		if strings.EqualFold(msgs[3],cur_nonce_str) == false {
+		    //TODO must set acceptreqaddr(.....)
+		    res2 := RpcDcrmRes{Ret:"",Tip:"dcrm back-end internal error:req addr nonce error",Err:fmt.Errorf("req addr nonce error")}
+		    ch <- res2
+		    return false
+		}
+		//
+		
+		_,err = SetReqAddrNonce(msgs[0],msgs[3])
+		if err != nil {
+		    //TODO must set acceptreqaddr(.....)
+		    res2 := RpcDcrmRes{Ret:"",Tip:"dcrm back-end internal error:set req addr nonce fail in RecvMsg.Run",Err:fmt.Errorf("set req addr nonce fail in recvmsg.run")}
+		    ch <- res2
+		    return false
+		}
+		////
+	    }
+
+	    //nonce check
 	    if rr.MsgType == "rpc_lockout" {
 		msgs := strings.Split(rr.Msg,":")
 		//nonce check

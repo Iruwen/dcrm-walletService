@@ -541,6 +541,23 @@ func ReqDcrmAddr(raw string,mode string) (string,string,error) {
 		}
 	    }
 	}
+	
+	//nonce check
+	cur_nonce_str,tip,err := dev.GetReqAddrNonce(from.Hex())
+	if err != nil {
+	    return "",tip,err
+	}
+
+	if strings.EqualFold(fmt.Sprintf("%v",Nonce),cur_nonce_str) == false {
+	    return "","req addr nonce error",fmt.Errorf("nonce error.")
+	}
+	//
+	
+	tip,err = dev.SetReqAddrNonce(from.Hex(),fmt.Sprintf("%v",Nonce))
+	if err != nil {
+	    return "",tip,fmt.Errorf("update nonce error.")
+	}
+
 	////////bug
     }
 

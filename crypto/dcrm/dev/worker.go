@@ -131,7 +131,7 @@ func InitDev(keyfile string,groupId string) {
     go SaveReqAddrToDb()
     go SaveLockOutToDb()
 
-    ReSendTimes = 6
+    ReSendTimes = 3
     
     go CommitRpcReq()
     go ec2.GenRandomInt(2048)
@@ -2918,7 +2918,7 @@ func (self *ReqAddrSendMsgToDcrm) Run(workid int,ch chan interface{}) bool {
 
     for i:=0;i<ReSendTimes;i++ {
 	SendToGroupAllNodes(self.GroupId,res)
-	time.Sleep(time.Duration(3)*time.Second) //1000 == 1s
+	time.Sleep(time.Duration(2)*time.Second) //1000 == 1s
     }
     /*if err != nil {
 	fmt.Println("=============ReqAddrSendMsgToMsg.Run,send to group all nodes,err =%v ===========",err)
@@ -2990,7 +2990,7 @@ func (self *LockOutSendMsgToDcrm) Run(workid int,ch chan interface{}) bool {
 
     for i:=0;i<ReSendTimes;i++ {
 	SendToGroupAllNodes(self.GroupId,res)
-	time.Sleep(time.Duration(3)*time.Second) //1000 == 1s
+	time.Sleep(time.Duration(2)*time.Second) //1000 == 1s
     }
     /*_,err = SendToGroupAllNodes(self.GroupId,res)
     if err != nil {

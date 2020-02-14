@@ -131,7 +131,7 @@ func InitDev(keyfile string,groupId string) {
     go SaveReqAddrToDb()
     go SaveLockOutToDb()
 
-    ReSendTimes = 3
+    ReSendTimes = 1
     
     go CommitRpcReq()
     go ec2.GenRandomInt(2048)

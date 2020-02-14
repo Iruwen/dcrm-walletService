@@ -644,7 +644,15 @@ func SendRawTransaction (c *rpcutils.RpcClient, tx *wire.MsgTx, allowHighFees bo
 
 	retJSON, err := c.Send(string(marshalledJSON))
 	var res interface{}
-	json.Unmarshal([]byte(retJSON),&res)
+	err = json.Unmarshal([]byte(retJSON),&res)
+	if err != nil {
+	    return "", fmt.Errorf("json.Unmarshal retJSON error")
+	}
+
+	if res == nil {
+	    return "", fmt.Errorf("json.Unmarshal retJSON error")
+	}
+
 	txhash := res.(map[string]interface{})["result"]
 	if txhash == nil {
 		return "", fmt.Errorf("retJSON")

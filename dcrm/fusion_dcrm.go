@@ -25,7 +25,7 @@ import (
 	"strconv"
 	"time"
 	"sync"
-	"github.com/fsn-dev/dcrm-walletService/crypto/dcrm/dev"
+	//"github.com/fsn-dev/dcrm-walletService/crypto/decdsa"
 	"github.com/fsn-dev/dcrm-walletService/internal/common"
 	"github.com/fsn-dev/dcrm-walletService/coins"
 	"github.com/fsn-dev/dcrm-walletService/coins/eos"
@@ -37,7 +37,6 @@ import (
 
 var (
     tmp2 string
-    cur_enode string
     init_times = 0
     PubLock sync.Mutex
     SignLock sync.Mutex
@@ -73,159 +72,6 @@ type DcrmPubkeyRes struct {
     DcrmAddress map[string]string
 }
 
-/*func GetPubKeyData(key []byte,account string,cointype string) (string,string,error) {
-    if key == nil || cointype == "" {
-	return "","dcrm back-end internal error:parameter error in func GetPubKeyData",fmt.Errorf("get pubkey data param error.")
-    }
-
-    PubLock.Lock()
-    dir := dev.GetDbDir()
-    ////////
-    db,err := ethdb.NewLDBDatabase(dir, 0, 0)
-    //bug
-    if err != nil {
-	for i:=0;i<1000;i++ {
-	    db,err = ethdb.NewLDBDatabase(dir, 0, 0)
-	    if err == nil {
-		break
-	    }
-	    
-	    time.Sleep(time.Duration(1000000))
-	}
-    }
-    //
-    if err != nil {
-        PubLock.Unlock()
-	return "","dcrm back-end internal error:open level db fail",err
-    }
-    
-    da,err := db.Get(key)
-    ///////
-    if err != nil {
-	db.Close()
-	PubLock.Unlock()
-	return "","dcrm back-end internal error:get data from db fail in func GetPubKeyData",err
-    }
-
-    ds,err := dev.UnCompress(string(da))
-    if err != nil {
-	db.Close()
-	PubLock.Unlock()
-	return "","dcrm back-end internal error:uncompress data fail in func GetPubKeyData",err
-    }
-
-    dss,err := dev.Decode2(ds,"PubKeyData")
-    if err != nil {
-	db.Close()
-	PubLock.Unlock()
-	return "","dcrm back-end internal error:decode PubKeyData fail",err
-    }
-
-    pubs := dss.(*dev.PubKeyData)
-    pubkey := hex.EncodeToString([]byte(pubs.Pub))
-    db.Close()
-    PubLock.Unlock()
-    ///////////
-    var m interface{}
-    if !strings.EqualFold(cointype, "ALL") {
-
-	h := cryptocoins.NewCryptocoinHandler(cointype)
-	if h == nil {
-	    return "","cointype is not supported",fmt.Errorf("req addr fail.cointype is not supported.")
-	}
-
-	ctaddr, err := h.PublicKeyToAddress(pubkey)
-	if err != nil {
-	    return "","dcrm back-end internal error:get dcrm addr fail from pubkey:"+pubkey,fmt.Errorf("req addr fail.")
-	}
-
-	m = &DcrmAddrRes{Account:account,PubKey:pubkey,DcrmAddr:ctaddr,Cointype:cointype}
-	b,_ := json.Marshal(m)
-	return string(b),"",nil
-    }
-    
-    addrmp := make(map[string]string)
-    for _, ct := range cryptocoins.Cointypes {
-	if strings.EqualFold(ct, "ALL") {
-	    continue
-	}
-
-	h := cryptocoins.NewCryptocoinHandler(ct)
-	if h == nil {
-	    continue
-	}
-	ctaddr, err := h.PublicKeyToAddress(pubkey)
-	if err != nil {
-	    continue
-	}
-	
-	addrmp[ct] = ctaddr
-    }
-
-    m = &DcrmPubkeyRes{Account:account, PubKey:pubkey, DcrmAddress:addrmp}
-    b,_ := json.Marshal(m)
-    return string(b),"",nil
-}
-
-func ExsitPubKey(account string,cointype string) (string,bool) {
-     //db
-    PubLock.Lock()
-    dir := dev.GetDbDir()
-    ////////
-    db,err := ethdb.NewLDBDatabase(dir, 0, 0)
-    //bug
-    if err != nil {
-	for i:=0;i<1000;i++ {
-	    db,err = ethdb.NewLDBDatabase(dir, 0, 0)
-	    if err == nil {
-		break
-	    }
-	    
-	    time.Sleep(time.Duration(1000000))
-	}
-    }
-    //
-    if err != nil {
-        PubLock.Unlock()
-        return "",false
-    }
-    
-    key := dev.Keccak256Hash([]byte(strings.ToLower(account + ":" + cointype))).Hex()
-    da,err := db.Get([]byte(key))
-    ///////
-    if err != nil {
-	key = dev.Keccak256Hash([]byte(strings.ToLower(account + ":" + "ALL"))).Hex()
-	da,err = db.Get([]byte(key))
-	///////
-	if err != nil {
-	    db.Close()
-	    PubLock.Unlock()
-	    return "",false
-	}
-    }
-
-    ds,err := dev.UnCompress(string(da))
-    if err != nil {
-	db.Close()
-	PubLock.Unlock()
-	return "",false
-    }
-
-    dss,err := dev.Decode2(ds,"PubKeyData")
-    if err != nil {
-	db.Close()
-	PubLock.Unlock()
-	return "",false
-    }
-
-    pubs := dss.(*dev.PubKeyData)
-    pubkey := hex.EncodeToString([]byte(pubs.Pub))
-    db.Close()
-    PubLock.Unlock()
-    return pubkey,true
-}
-*/
-
 func GetPubKeyData(key string,account string,cointype string) (string,string,error) {
     if key == "" || cointype == "" {
 	return "","dcrm back-end internal error:parameter error in func GetPubKeyData",fmt.Errorf("get pubkey data param error.")
@@ -233,9 +79,9 @@ func GetPubKeyData(key string,account string,cointype string) (string,string,err
 
     //da,exsit := dev.LdbPubKeyData[key]
     var da []byte
-    datmp,exsit := dev.LdbPubKeyData.ReadMap(key)
+    datmp,exsit := LdbPubKeyData.ReadMap(key)
     if exsit == false {
-	da2 := dev.GetPubKeyDataValueFromDb(key)
+	da2 := GetPubKeyDataValueFromDb(key)
 	if da2 == nil {
 	    exsit = false
 	} else {
@@ -251,17 +97,17 @@ func GetPubKeyData(key string,account string,cointype string) (string,string,err
 	return "","dcrm back-end internal error:get data from db fail in func GetPubKeyData",fmt.Errorf("dcrm back-end internal error:get data from db fail in func GetPubKeyData")
     }
 
-    ds,err := dev.UnCompress(string(da))
+    ds,err := UnCompress(string(da))
     if err != nil {
 	return "","dcrm back-end internal error:uncompress data fail in func GetPubKeyData",err
     }
 
-    dss,err := dev.Decode2(ds,"PubKeyData")
+    dss,err := Decode2(ds,"PubKeyData")
     if err != nil {
 	return "","dcrm back-end internal error:decode PubKeyData fail",err
     }
 
-    pubs := dss.(*dev.PubKeyData)
+    pubs := dss.(*PubKeyData)
     pubkey := hex.EncodeToString([]byte(pubs.Pub))
     ///////////
     var m interface{}
@@ -306,11 +152,11 @@ func GetPubKeyData(key string,account string,cointype string) (string,string,err
 }
 
 func ExsitPubKey(account string,cointype string) (string,bool) {
-    key := dev.Keccak256Hash([]byte(strings.ToLower(account + ":" + cointype))).Hex()
+    key := Keccak256Hash([]byte(strings.ToLower(account + ":" + cointype))).Hex()
     var da []byte
-    datmp,exsit := dev.LdbPubKeyData.ReadMap(key)
+    datmp,exsit := LdbPubKeyData.ReadMap(key)
     if exsit == false {
-	da2 := dev.GetPubKeyDataValueFromDb(key)
+	da2 := GetPubKeyDataValueFromDb(key)
 	if da2 == nil {
 	    exsit = false
 	} else {
@@ -322,10 +168,10 @@ func ExsitPubKey(account string,cointype string) (string,bool) {
     }
     ///////
     if exsit == false {
-	key = dev.Keccak256Hash([]byte(strings.ToLower(account + ":" + "ALL"))).Hex()
-	datmp,exsit = dev.LdbPubKeyData.ReadMap(key)
+	key = Keccak256Hash([]byte(strings.ToLower(account + ":" + "ALL"))).Hex()
+	datmp,exsit = LdbPubKeyData.ReadMap(key)
 	if exsit == false {
-	    da2 := dev.GetPubKeyDataValueFromDb(key)
+	    da2 := GetPubKeyDataValueFromDb(key)
 	    if da2 == nil {
 		exsit = false
 	    } else {
@@ -341,17 +187,17 @@ func ExsitPubKey(account string,cointype string) (string,bool) {
 	}
     }
 
-    ds,err := dev.UnCompress(string(da))
+    ds,err := UnCompress(string(da))
     if err != nil {
 	return "",false
     }
 
-    dss,err := dev.Decode2(ds,"PubKeyData")
+    dss,err := Decode2(ds,"PubKeyData")
     if err != nil {
 	return "",false
     }
 
-    pubs := dss.(*dev.PubKeyData)
+    pubs := dss.(*PubKeyData)
     pubkey := hex.EncodeToString([]byte(pubs.Pub))
     return pubkey,true
 }
@@ -374,13 +220,13 @@ func SendReqToGroup(msg string,rpctype string) (string,string,error) {
 
 	//account:cointype:groupid:nonce:threshold:mode:tx1:tx2:tx3....:txn
 	//str := msgs[0] + ":" + coin + ":" + msgs[2] + ":" + msgs[3] + ":" + msgs[4] + ":" + msgs[5]
-	ret,tip,err := dev.SendReqToGroup(str,rpctype)
+	ret,tip,err := SendReqToGroup2(str,rpctype)
 	if err != nil || ret == "" {
 	    return "",tip,err
 	}
 
 	pubkeyhex := ret
-	keytest := dev.Keccak256Hash([]byte(strings.ToLower(msgs[0] + ":" + msgs[1] + ":" + msgs[2] + ":" + msgs[3] + ":" + msgs[4] + ":" + msgs[5]))).Hex()
+	keytest := Keccak256Hash([]byte(strings.ToLower(msgs[0] + ":" + msgs[1] + ":" + msgs[2] + ":" + msgs[3] + ":" + msgs[4] + ":" + msgs[5]))).Hex()
 	fmt.Println("====================dcrm.SendReqToGroup,pubkey = %s,key=%s =====================",ret,keytest)
 
 	var m interface{}
@@ -424,7 +270,7 @@ func SendReqToGroup(msg string,rpctype string) (string,string,error) {
 	return string(b),"",nil
     }
     
-    ret,tip,err := dev.SendReqToGroup(msg,rpctype)
+    ret,tip,err := SendReqToGroup2(msg,rpctype)
     if err != nil || ret == "" {
 	return "",tip,err
     }
@@ -512,11 +358,11 @@ func ReqDcrmAddr(raw string,mode string) (string,string,error) {
 	}
     } else {
 	////////bug
-	key := dev.Keccak256Hash([]byte(strings.ToLower(from.Hex() + ":" + "ALL" + ":" + groupid + ":" + fmt.Sprintf("%v",Nonce) + ":" + threshold + ":" + mode))).Hex()
+	key := Keccak256Hash([]byte(strings.ToLower(from.Hex() + ":" + "ALL" + ":" + groupid + ":" + fmt.Sprintf("%v",Nonce) + ":" + threshold + ":" + mode))).Hex()
 	var da []byte
-	datmp,exsit := dev.LdbReqAddr.ReadMap(key)
+	datmp,exsit := LdbReqAddr.ReadMap(key)
 	if exsit == false {
-	    da2 := dev.GetReqAddrValueFromDb(key)
+	    da2 := GetReqAddrValueFromDb(key)
 	    if da2 == nil {
 		exsit = false
 	    } else {
@@ -528,11 +374,11 @@ func ReqDcrmAddr(raw string,mode string) (string,string,error) {
 	}
 
 	if exsit == true {
-	    ds,err := dev.UnCompress(string(da))
+	    ds,err := UnCompress(string(da))
 	    if err == nil {
-		dss,err := dev.Decode2(ds,"AcceptReqAddrData")
+		dss,err := Decode2(ds,"AcceptReqAddrData")
 		if err == nil {
-		    ac := dss.(*dev.AcceptReqAddrData)
+		    ac := dss.(*AcceptReqAddrData)
 		    if ac != nil && strings.EqualFold(ac.Status, "Pending") {
 			fmt.Println("===================!!!!dcrm_reqDcrmAddr,this req addr has already handle,acc =%s,cointype =ALL,groupid =%s,nonce =%v,threshold =%s,mode =%s,key =%s!!!!============================",from.Hex(),groupid,Nonce,threshold,mode,key)
 			return "","the req dcrm addr has already handle,status is pending",fmt.Errorf("the req dcrm addr has already handle,status is pending.")
@@ -542,7 +388,7 @@ func ReqDcrmAddr(raw string,mode string) (string,string,error) {
 	}
 	
 	//nonce check
-	cur_nonce_str,tip,err := dev.GetReqAddrNonce(from.Hex())
+	cur_nonce_str,tip,err := GetReqAddrNonce(from.Hex())
 	if err != nil {
 	    return "",tip,err
 	}
@@ -552,7 +398,7 @@ func ReqDcrmAddr(raw string,mode string) (string,string,error) {
 	}
 	//
 	
-	tip,err = dev.SetReqAddrNonce(from.Hex(),fmt.Sprintf("%v",Nonce))
+	tip,err = SetReqAddrNonce(from.Hex(),fmt.Sprintf("%v",Nonce))
 	if err != nil {
 	    return "",tip,fmt.Errorf("update nonce error.")
 	}
@@ -576,7 +422,7 @@ func ReqDcrmAddr(raw string,mode string) (string,string,error) {
 	}
     }()
 
-    key := dev.Keccak256Hash([]byte(strings.ToLower(from.Hex() + ":" + "ALL" + ":" + groupid + ":" + fmt.Sprintf("%v",Nonce) + ":" + threshold + ":" + mode))).Hex()
+    key := Keccak256Hash([]byte(strings.ToLower(from.Hex() + ":" + "ALL" + ":" + groupid + ":" + fmt.Sprintf("%v",Nonce) + ":" + threshold + ":" + mode))).Hex()
     fmt.Println("===============ReqDcrmAddr,return key =%s================",key)
     return key,"",nil
 }
@@ -623,11 +469,11 @@ func AcceptReqAddr(raw string) (string,string,error) {
     }
 
     ////bug,check valid accepter
-    key := dev.Keccak256Hash([]byte(strings.ToLower(datas[1] + ":" + datas[2] + ":" + datas[3] + ":" + datas[4] + ":" + datas[5] + ":" + datas[6]))).Hex()
+    key := Keccak256Hash([]byte(strings.ToLower(datas[1] + ":" + datas[2] + ":" + datas[3] + ":" + datas[4] + ":" + datas[5] + ":" + datas[6]))).Hex()
     var da []byte
-    datmp,exsit := dev.LdbReqAddr.ReadMap(key)
+    datmp,exsit := LdbReqAddr.ReadMap(key)
     if exsit == false {
-	da2 := dev.GetReqAddrValueFromDb(key)
+	da2 := GetReqAddrValueFromDb(key)
 	if da2 == nil {
 	    exsit = false
 	} else {
@@ -642,17 +488,17 @@ func AcceptReqAddr(raw string) (string,string,error) {
 	return "","dcrm back-end internal error:get accept data fail from db",fmt.Errorf("dcrm back-end internal error:get accept data fail from db")
     }
 
-    ds,err := dev.UnCompress(string(da))
+    ds,err := UnCompress(string(da))
     if err != nil {
 	return "","dcrm back-end internal error:uncompress accept data fail",err
     }
 
-    dss,err := dev.Decode2(ds,"AcceptReqAddrData")
+    dss,err := Decode2(ds,"AcceptReqAddrData")
     if err != nil {
 	return "","dcrm back-end internal error:decode accept data fail",err
     }
 
-    ac := dss.(*dev.AcceptReqAddrData)
+    ac := dss.(*AcceptReqAddrData)
     if ac == nil || len(ac.NodeSigs) == 0 {
 	return "","dcrm back-end internal error:decode accept data fail",fmt.Errorf("decode accept data fail")
     }
@@ -690,7 +536,7 @@ func AcceptReqAddr(raw string) (string,string,error) {
     }
     ////////////////////////////
 
-    tip,err := dev.AcceptReqAddr(datas[1],datas[2],datas[3],datas[4],datas[5],datas[6],false,accept,status,"","","","",ac.WorkId)
+    tip,err := AcceptReqAddr2(datas[1],datas[2],datas[3],datas[4],datas[5],datas[6],false,accept,status,"","","","",ac.WorkId)
     if err != nil {
 	return "",tip,err
     }
@@ -731,7 +577,7 @@ func AcceptLockOut(raw string) (string,string,error) {
 	return "","transaction data format error,the lastest segment is not AGREE or DISAGREE",fmt.Errorf("transaction data format error")
     }
 
-    key2 := dev.Keccak256Hash([]byte(strings.ToLower(datas[4]))).Hex()
+    key2 := Keccak256Hash([]byte(strings.ToLower(datas[4]))).Hex()
     pubdata,tip,err := GetPubKeyData(key2,datas[1],datas[7])
     if err != nil {
 	return "",tip,err
@@ -746,11 +592,11 @@ func AcceptLockOut(raw string) (string,string,error) {
     }
 
     ////bug,check valid accepter
-    //da,exsit := dev.LdbPubKeyData[key2]
+    //da,exsit := LdbPubKeyData[key2]
     var da []byte
-    datmp,exsit := dev.LdbPubKeyData.ReadMap(key2)
+    datmp,exsit := LdbPubKeyData.ReadMap(key2)
     if exsit == false {
-	da2 := dev.GetPubKeyDataValueFromDb(key2)
+	da2 := GetPubKeyDataValueFromDb(key2)
 	if da2 == nil {
 	    exsit = false
 	} else {
@@ -765,17 +611,17 @@ func AcceptLockOut(raw string) (string,string,error) {
 	return "","dcrm back-end internal error:get lockout data from db fail",fmt.Errorf("get lockout data from db fail")
     }
 
-    ss,err := dev.UnCompress(string(da))
+    ss,err := UnCompress(string(da))
     if err != nil {
 	return "","dcrm back-end internal error:uncompress lockout data from db fail",fmt.Errorf("uncompress lockout data from db fail")
     }
     
-    pubs,err := dev.Decode2(ss,"PubKeyData")
+    pubs,err := Decode2(ss,"PubKeyData")
     if err != nil {
 	return "","dcrm back-end internal error:decode lockout data from db fail",fmt.Errorf("decode lockout data from db fail")
     }
     
-    pd := pubs.(*dev.PubKeyData)
+    pd := pubs.(*PubKeyData)
     if pd == nil {
 	return "","dcrm back-end internal error:decode lockout data from db fail",fmt.Errorf("decode lockout data from db fail")
     }
@@ -814,10 +660,10 @@ func AcceptLockOut(raw string) (string,string,error) {
     ////////////////////////////
 
     //ACCEPTLOCKOUT:account:groupid:nonce:dcrmaddr:dcrmto:value:cointype:threshold:mode:accept
-    key := dev.Keccak256Hash([]byte(strings.ToLower(datas[1] + ":" + datas[2] + ":" + datas[3] + ":" + datas[4] + ":" + datas[8]))).Hex()
-    datmp,exsit = dev.LdbLockOut.ReadMap(key)
+    key := Keccak256Hash([]byte(strings.ToLower(datas[1] + ":" + datas[2] + ":" + datas[3] + ":" + datas[4] + ":" + datas[8]))).Hex()
+    datmp,exsit = LdbLockOut.ReadMap(key)
     if exsit == false {
-	da2 := dev.GetLockOutValueFromDb(key)
+	da2 := GetLockOutValueFromDb(key)
 	if da2 == nil {
 	    exsit = false
 	} else {
@@ -832,22 +678,22 @@ func AcceptLockOut(raw string) (string,string,error) {
 	return "","dcrm back-end internal error:get accept result from db fail",fmt.Errorf("get accept result from db fail")
     }
 
-    ds,err := dev.UnCompress(string(da))
+    ds,err := UnCompress(string(da))
     if err != nil {
 	return "","dcrm back-end internal error:uncompress accept result fail",fmt.Errorf("uncompress accept result fail")
     }
 
-    dss,err := dev.Decode2(ds,"AcceptLockOutData")
+    dss,err := Decode2(ds,"AcceptLockOutData")
     if err != nil {
 	return "","dcrm back-end internal error:decode accept result fail",fmt.Errorf("decode accept result fail")
     }
 
-    ac := dss.(*dev.AcceptLockOutData)
+    ac := dss.(*AcceptLockOutData)
     if ac == nil {
 	return "","dcrm back-end internal error:get accept result from db fail",fmt.Errorf("get accept result from db fail")
     }
 
-    tip,err = dev.AcceptLockOut(datas[1],datas[2],datas[3],datas[4],datas[8],false,accept,status,"","","","",ac.WorkId)
+    tip,err = AcceptLockOut2(datas[1],datas[2],datas[3],datas[4],datas[8],false,accept,status,"","","","",ac.WorkId)
     if err != nil {
 	return "",tip,err
     }
@@ -893,13 +739,13 @@ func LockOut(raw string) (string,string,error) {
     }
 
     ///////bug
-    key2 := dev.Keccak256Hash([]byte(strings.ToLower(from.Hex() + ":" + groupid + ":" + fmt.Sprintf("%v",Nonce) + ":" + dcrmaddr + ":" + threshold))).Hex()
+    key2 := Keccak256Hash([]byte(strings.ToLower(from.Hex() + ":" + groupid + ":" + fmt.Sprintf("%v",Nonce) + ":" + dcrmaddr + ":" + threshold))).Hex()
     fmt.Println("========================================LockOut,fusion account = %s,dcrm from = %s,dcrm to = %s,value = %s,cointype = %s,groupid = %s,threshold = %s,mode =%s,nonce = %v,key=%s ====================================",from.Hex(),dcrmaddr,dcrmto,value,cointype,groupid,threshold,mode,Nonce,key2)
     
     var da []byte
-    datmp,exsit := dev.LdbLockOut.ReadMap(key2)
+    datmp,exsit := LdbLockOut.ReadMap(key2)
     if exsit == false {
-	da2 := dev.GetLockOutValueFromDb(key2)
+	da2 := GetLockOutValueFromDb(key2)
 	if da2 == nil {
 	    exsit = false
 	} else {
@@ -911,11 +757,11 @@ func LockOut(raw string) (string,string,error) {
     }
 
     if exsit == true {
-	ds,err := dev.UnCompress(string(da))
+	ds,err := UnCompress(string(da))
 	if err == nil {
-	    dss,err := dev.Decode2(ds,"AcceptLockOutData")
+	    dss,err := Decode2(ds,"AcceptLockOutData")
 	    if err == nil {
-		ac := dss.(*dev.AcceptLockOutData)
+		ac := dss.(*AcceptLockOutData)
 		if ac != nil && strings.EqualFold(ac.Status, "Pending") {
 		    fmt.Println("===================!!!!LockOut,this lockout has already handle,acc =%s,groupid =%s,nonce =%v,dcrmfrom =%s,threshold =%s,key =%s!!!!============================",from.Hex(),groupid,Nonce,dcrmaddr,threshold,key2)
 		    return "","the lockout has already handle,status is pending",fmt.Errorf("the lockout has already handle,status is pending.")
@@ -925,7 +771,7 @@ func LockOut(raw string) (string,string,error) {
     }
 
     //nonce check
-    cur_nonce_str,tip,err := dev.GetLockOutNonce(from.Hex(),cointype,dcrmaddr)
+    cur_nonce_str,tip,err := GetLockOutNonce(from.Hex(),cointype,dcrmaddr)
     if err != nil {
 	return "",tip,err
     }
@@ -935,7 +781,7 @@ func LockOut(raw string) (string,string,error) {
     }
     //
     
-    tip,err = dev.SetLockOutNonce(from.Hex(),cointype,dcrmaddr,fmt.Sprintf("%v",Nonce))
+    tip,err = SetLockOutNonce(from.Hex(),cointype,dcrmaddr,fmt.Sprintf("%v",Nonce))
     if err != nil {
 	return "",tip,fmt.Errorf("update nonce error.")
     }
@@ -959,22 +805,14 @@ func LockOut(raw string) (string,string,error) {
     return key2,"",nil
 }
 
-func GetReqAddrStatus(key string) (string,string,error) {
-    return dev.GetReqAddrStatus(key)
-}
-
-func GetLockOutStatus(key string) (string,string,error) {
-    return dev.GetLockOutStatus(key)
-}
-
 func GetAccountsBalance(pubkey string,geter_acc string) (interface{}, string, error) {
-    _,lmvalue := dev.AllAccounts.ListMap()
+    _,lmvalue := AllAccounts.ListMap()
     for _,v := range lmvalue {
 	if v == nil {
 	    continue
 	}
 
-	vv := v.(*dev.PubKeyData)
+	vv := v.(*PubKeyData)
 
 	if vv.Pub == "" || vv.GroupId == "" || vv.Mode == "" {
 	    continue
@@ -1104,24 +942,6 @@ func GetBalance(account string, cointype string,dcrmaddr string) (string,string,
     return ret,"",nil
 }
 
-func GetReqAddrNonce(account string) (string,string,error) {
-    nonce,tip,err := dev.GetReqAddrNonce(account)
-    if err != nil {
-	return "",tip,err
-    }
-
-    return nonce,"",nil
-}
-
-func GetLockOutNonce(account string,cointype string,dcrmaddr string) (string,string,error) {
-    nonce,tip,err := dev.GetLockOutNonce(account,cointype,dcrmaddr)
-    if err != nil {
-	return "",tip,err
-    }
-
-    return nonce,"",nil
-}
-
 func GetCurNodeReqAddrInfo(geter_acc string) ([]string,string,error) {
     reply,tip,err := SendReqToGroup(geter_acc,"rpc_get_cur_node_reqaddr_info")
     if reply == "" || err != nil {
@@ -1146,19 +966,19 @@ func GetCurNodeLockOutInfo(geter_acc string) ([]string,string,error) {
 
 func init(){
 	p2pdcrm.RegisterRecvCallback(Call)
-	p2pdcrm.SdkProtocol_registerBroadcastInGroupCallback(dev.Call)
-	p2pdcrm.SdkProtocol_registerSendToGroupCallback(dev.DcrmCall)
-	p2pdcrm.SdkProtocol_registerSendToGroupReturnCallback(dev.DcrmCallRet)
-	p2pdcrm.RegisterCallback(dev.Call)
+	p2pdcrm.SdkProtocol_registerBroadcastInGroupCallback(Call2)
+	p2pdcrm.SdkProtocol_registerSendToGroupCallback(DcrmCall)
+	p2pdcrm.SdkProtocol_registerSendToGroupReturnCallback(DcrmCallRet)
+	p2pdcrm.RegisterCallback(Call2)
 
-	dev.RegP2pGetGroupCallBack(p2pdcrm.SdkProtocol_getGroup)
-	dev.RegP2pSendToGroupAllNodesCallBack(p2pdcrm.SdkProtocol_SendToGroupAllNodes)
-	dev.RegP2pGetSelfEnodeCallBack(p2pdcrm.GetSelfID)
-	dev.RegP2pBroadcastInGroupOthersCallBack(p2pdcrm.SdkProtocol_broadcastInGroupOthers)
-	dev.RegP2pSendMsgToPeerCallBack(p2pdcrm.SendMsgToPeer)
-	dev.RegP2pParseNodeCallBack(p2pdcrm.ParseNodeID)
-	dev.RegDcrmGetEosAccountCallBack(eos.GetEosAccount)
-	dev.InitChan()
+	RegP2pGetGroupCallBack(p2pdcrm.SdkProtocol_getGroup)
+	RegP2pSendToGroupAllNodesCallBack(p2pdcrm.SdkProtocol_SendToGroupAllNodes)
+	RegP2pGetSelfEnodeCallBack(p2pdcrm.GetSelfID)
+	RegP2pBroadcastInGroupOthersCallBack(p2pdcrm.SdkProtocol_broadcastInGroupOthers)
+	RegP2pSendMsgToPeerCallBack(p2pdcrm.SendMsgToPeer)
+	RegP2pParseNodeCallBack(p2pdcrm.ParseNodeID)
+	RegDcrmGetEosAccountCallBack(eos.GetEosAccount)
+	InitChan()
 }
 
 func Call(msg interface{}) {
@@ -1203,7 +1023,7 @@ func receiveSplitKey(msg interface{}){
 func Init(groupId string) {
     out := "=============Init================" + " get group id = " + groupId
     fmt.Println(out)
-    dev.InitDev(KeyFile,groupId)
+    InitDev(KeyFile,groupId)
 }
 
 func SetUpMsgList(msg string) {
@@ -1213,9 +1033,5 @@ func SetUpMsgList(msg string) {
 	receiveSplitKey(msg)
 	return
     }
-}
-
-func GetAccounts(gid,mode string) (interface{}, string, error) {
-    return dev.GetAccounts(gid, mode)
 }
 

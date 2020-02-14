@@ -14,7 +14,7 @@
  *
  */
 
-package dev
+package decdsa 
 
 import (
     //"fmt"
@@ -23,7 +23,7 @@ import (
     //"time"
     "math/big"
     "github.com/fsn-dev/dcrm-walletService/crypto/secp256k1"
-    "github.com/fsn-dev/dcrm-walletService/crypto/dcrm/dev/lib/ec2"
+    "github.com/fsn-dev/dcrm-walletService/crypto/decdsa/lib/ec2"
     //"strconv"
     //"strings"
     //"github.com/fsn-dev/dcrm-walletService/crypto/dcrm/dev/lib/ed"
@@ -64,7 +64,7 @@ func DECDSA_Key_RoundOne(ThresHold int,PaillierKeyLength int) (*big.Int,*ec2.Pol
     return u1,u1Poly,u1PolyG,commitU1G,u1PaillierPk, u1PaillierSk
 }
 
-func DECDSA_Key_Vss(u1Poly *ec2.PolyStruct2,ids sortableIDSSlice) ([]*ec2.ShareStruct2,error) {
+func DECDSA_Key_Vss(u1Poly *ec2.PolyStruct2,ids []*big.Int) ([]*ec2.ShareStruct2,error) {
     if u1Poly == nil {
 	return nil,nil
     }

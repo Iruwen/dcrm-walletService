@@ -14,7 +14,7 @@
  *
  */
 
-package dev
+package dcrm 
 
 import (
     "fmt"
@@ -23,10 +23,11 @@ import (
     "time"
     "math/big"
     "github.com/fsn-dev/dcrm-walletService/crypto/secp256k1"
-    "github.com/fsn-dev/dcrm-walletService/crypto/dcrm/dev/lib/ec2"
+    "github.com/fsn-dev/dcrm-walletService/crypto/decdsa/lib/ec2"
     "strconv"
     "strings"
-    "github.com/fsn-dev/dcrm-walletService/crypto/dcrm/dev/lib/ed"
+    "github.com/fsn-dev/dcrm-walletService/crypto/decdsa/lib/ed"
+    "github.com/fsn-dev/dcrm-walletService/crypto/decdsa"
     "github.com/fsn-dev/dcrm-walletService/internal/common"
     "github.com/fsn-dev/dcrm-walletService/coins/tools/types"
     cryptorand "crypto/rand"
@@ -151,7 +152,7 @@ func dcrm_genPubKey(msgprex string,account string,cointype string,ch chan interf
 	LdbPubKeyData.WriteMap(key2,[]byte(nonce))
 	////
 
-	tip,reply := AcceptReqAddr(account,cointype,wk.groupid,nonce,wk.limitnum,mode,true,"true","Success",pubkeyhex,"","","",id)
+	tip,reply := AcceptReqAddr2(account,cointype,wk.groupid,nonce,wk.limitnum,mode,true,"true","Success",pubkeyhex,"","","",id)
 	if reply != nil {
 	    res := RpcDcrmRes{Ret:"",Tip:tip,Err:fmt.Errorf("update req addr status error.")}
 	    ch <- res
@@ -338,7 +339,7 @@ func dcrm_genPubKey(msgprex string,account string,cointype string,ch chan interf
     LdbPubKeyData.WriteMap(key2,[]byte(nonce))
     ////
 
-    tip,reply := AcceptReqAddr(account,cointype,wk.groupid,nonce,wk.limitnum,mode,true,"true","Success",pubkeyhex,"","","",id)
+    tip,reply := AcceptReqAddr2(account,cointype,wk.groupid,nonce,wk.limitnum,mode,true,"true","Success",pubkeyhex,"","","",id)
     if reply != nil {
 	res := RpcDcrmRes{Ret:"",Tip:tip,Err:fmt.Errorf("update req addr status error.")}
 	ch <- res
@@ -1316,7 +1317,7 @@ func DECDSAGenKeyRoundOne(msgprex string,ch chan interface{},w *RpcReqWorker) (*
 	return nil,nil,nil,nil,nil,nil,false
     }
 
-    u1,u1Poly,u1PolyG,commitU1G,u1PaillierPk, u1PaillierSk := DECDSA_Key_RoundOne(ThresHold,PaillierKeyLength)
+    u1,u1Poly,u1PolyG,commitU1G,u1PaillierPk, u1PaillierSk := decdsa.DECDSA_Key_RoundOne(ThresHold,PaillierKeyLength)
     if u1PaillierPk == nil || u1PaillierSk == nil {
 	res := RpcDcrmRes{Ret:"",Err:fmt.Errorf("gen paillier key pair fail")}
 	ch <- res
@@ -1361,7 +1362,7 @@ func DECDSAGenKeyRoundTwo(msgprex string,cointype string,ch chan interface{},w *
     // [notes]
     // all nodes has their own id, in practival, we can take it as double hash of public key of fusion
 
-    u1Shares,err := DECDSA_Key_Vss(u1Poly,ids)
+    u1Shares,err := decdsa.DECDSA_Key_Vss(u1Poly,ids)
     if err != nil {
 	res := RpcDcrmRes{Ret:"",Err:err}
 	ch <- res
@@ -1389,7 +1390,7 @@ func DECDSAGenKeyRoundTwo(msgprex string,cointype string,ch chan interface{},w *
 	}
 
 	for _,v := range u1Shares {
-	    uid := DECDSA_Key_GetSharesId(v)
+	    uid := decdsa.DECDSA_Key_GetSharesId(v)
 	    if uid != nil && uid.Cmp(id) == 0 {
 		mp := []string{msgprex,cur_enode}
 		enode := strings.Join(mp,"-")
@@ -1504,7 +1505,7 @@ func DECDSAGenKeyVerifyShareData(msgprex string,cointype string,ch chan interfac
     }
 
     for _,v := range u1Shares {
-	uid := DECDSA_Key_GetSharesId(v)
+	uid := decdsa.DECDSA_Key_GetSharesId(v)
 	if uid == nil {
 	    continue
 	}
@@ -1584,7 +1585,7 @@ func DECDSAGenKeyVerifyShareData(msgprex string,cointype string,ch chan interfac
 	    return nil,nil,false
 	}
 	//
-	if DECDSA_Key_Verify_Share(sstruct[en[0]],upg[en[0]]) == false {
+	if decdsa.DECDSA_Key_Verify_Share(sstruct[en[0]],upg[en[0]]) == false {
 	    res := RpcDcrmRes{Ret:"",Err:GetRetErr(ErrVerifySHARE1Fail)}
 	    ch <- res
 	    return nil,nil,false
@@ -1745,7 +1746,7 @@ func DECDSAGenKeyVerifyCommitment(msgprex string,cointype string,ch chan interfa
 	    ch <- res
 	    return nil,nil,false
 	}
-	if DECDSA_Key_Commitment_Verify(udecom[en[0]]) == false {
+	if decdsa.DECDSA_Key_Commitment_Verify(udecom[en[0]]) == false {
 	    res := RpcDcrmRes{Ret:"",Err:GetRetErr(ErrKeyGenVerifyCommitFail)}
 	    ch <- res
 	    return nil,nil,false
@@ -1767,7 +1768,7 @@ func DECDSAGenKeyRoundFour(msgprex string,ch chan interface{},w *RpcReqWorker) (
     // zk of paillier key
     NtildeLength := 2048 
     // for u1
-    u1NtildeH1H2 := DECDSA_Key_GenerateNtildeH1H2(NtildeLength)
+    u1NtildeH1H2 := decdsa.DECDSA_Key_GenerateNtildeH1H2(NtildeLength)
     if u1NtildeH1H2 == nil {
 	fmt.Println("=====================gen ntilde h1 h2 fail=======================")
 	res := RpcDcrmRes{Ret:"",Err:fmt.Errorf("gen ntilde h1 h2 fail.")}
@@ -1806,7 +1807,7 @@ func DECDSAGenKeyRoundFive(msgprex string,ch chan interface{},w *RpcReqWorker,u1
     }
 
     // zk of u
-    u1zkUProof := DECDSA_Key_ZkUProve(u1) 
+    u1zkUProof := decdsa.DECDSA_Key_ZkUProve(u1) 
 
     // 8. Broadcast zk
     // u1zkUProof, u2zkUProof, u3zkUProof, u4zkUProof, u5zkUProof
@@ -1864,7 +1865,7 @@ func DECDSAGenKeyVerifyZKU(msgprex string,cointype string,ch chan interface{},w 
 		e := new(big.Int).SetBytes([]byte(mm[2]))
 		s := new(big.Int).SetBytes([]byte(mm[3]))
 		zkUProof := &ec2.ZkUProof{E: e, S: s}
-		if !DECDSA_Key_ZkUVerify(ug[en[0]],zkUProof) {
+		if !decdsa.DECDSA_Key_ZkUVerify(ug[en[0]],zkUProof) {
 		    res := RpcDcrmRes{Ret:"",Err:GetRetErr(ErrVerifyZKUPROOFFail)}
 		    ch <- res
 		    return false 

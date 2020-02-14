@@ -14,10 +14,10 @@
  *
  */
 
-package dev
+package decdsa
 
 import (
-    "github.com/fsn-dev/dcrm-walletService/crypto/dcrm/dev/lib/ec2"
+    "github.com/fsn-dev/dcrm-walletService/crypto/decdsa/lib/ec2"
     "math/big"
     "github.com/fsn-dev/dcrm-walletService/crypto/secp256k1"
     "crypto/rand"
@@ -63,7 +63,7 @@ func DECDSA_Sign_MtAZK1Verify(zkproof *ec2.MtAZK1Proof_nhh,c *big.Int, publicKey
     return zkproof.MtAZK1Verify_nhh(c,publicKey,ntildeH1H2)
 }
 
-func GetRandomBetaV(PaillierKeyLength int) ([]*big.Int,[]*big.Int,[]*big.Int,[]*big.Int) {
+func GetRandomBetaV(PaillierKeyLength int,ThresHold int) ([]*big.Int,[]*big.Int,[]*big.Int,[]*big.Int) {
     // 2.6
     // select betaStar randomly, and calculate beta, MtA(k, gamma)
     // select betaStar randomly, and calculate beta, MtA(k, w)
@@ -281,6 +281,7 @@ func DECDSA_Sign_Calc_v(r, deltaGammaGy,pkx,pky,R,S *big.Int,hashBytes []byte,in
     return recid
 }
 
+var SepSave = "dcrmsepsave"
 func GetPaillierPk(save string,index int) *ec2.PublicKey {
     if save == "" || index < 0 {
 	return nil
@@ -319,8 +320,8 @@ func GetPaillierSk(save string,index int) *ec2.PrivateKey {
 }
 
 //paillier question 2,delete zkfactor,add ntilde h1 h2
-func GetZkFactProof(save string,index int) *ec2.NtildeH1H2 {
-    if save == "" || index < 0 {
+func GetZkFactProof(save string,index int,NodeCnt int) *ec2.NtildeH1H2 {
+    if save == "" || index < 0 || NodeCnt < 0 {
 	fmt.Println("===============GetZkFactProof,get zkfactproof error,save = %s,index = %v ==============",save,index)
 	return nil
     }

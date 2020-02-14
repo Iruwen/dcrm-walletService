@@ -380,7 +380,8 @@ func SendReqToGroup(msg string,rpctype string) (string,string,error) {
 	}
 
 	pubkeyhex := ret
-	fmt.Println("====================dcrm.SendReqToGroup,pubkey = %s =====================",ret)
+	keytest := dev.Keccak256Hash([]byte(strings.ToLower(msgs[0] + ":" + msgs[1] + ":" + msgs[2] + ":" + msgs[3] + ":" + msgs[4] + ":" + msgs[5]))).Hex()
+	fmt.Println("====================dcrm.SendReqToGroup,pubkey = %s,key=%s =====================",ret,keytest)
 
 	var m interface{}
 	if !strings.EqualFold(msgs[1], "ALL") {
@@ -406,12 +407,10 @@ func SendReqToGroup(msg string,rpctype string) (string,string,error) {
 	    }
 
 	    h := coins.NewCryptocoinHandler(ct)
-	    fmt.Println("================dcrm.SendReqToGroup,get cointpe handler = %v,cointype =%s,================",h,ct)
 	    if h == nil {
 		continue
 	    }
 	    ctaddr, err := h.PublicKeyToAddress(pubkeyhex)
-	    fmt.Println("================dcrm.SendReqToGroup,get dcrm addr = %s,cointype =%s,err =%v================",ctaddr,ct,err)
 	    if err != nil {
 		continue
 	    }
@@ -421,7 +420,7 @@ func SendReqToGroup(msg string,rpctype string) (string,string,error) {
 
 	m = &DcrmPubkeyRes{Account:msgs[0],PubKey:pubkeyhex,DcrmAddress:addrmp}
 	b,_ := json.Marshal(m)
-	fmt.Println("================dcrm.SendReqToGroup,get all dcrm addr = %s================",string(b))
+	fmt.Println("================dcrm.SendReqToGroup,get all dcrm addr = %s,key=%s================",string(b),keytest)
 	return string(b),"",nil
     }
     
@@ -873,8 +872,6 @@ func LockOut(raw string) (string,string,error) {
 	}
     }
 
-    fmt.Println("===================LockOut,fusion account =%s======================",from.Hex())
-
     data := string(tx.Data())
     datas := strings.Split(data,":")
     //LOCKOUT:dcrmaddr:dcrmto:value:cointype:groupid:threshold:mode
@@ -891,13 +888,14 @@ func LockOut(raw string) (string,string,error) {
     mode := datas[7]
     Nonce := tx.Nonce() 
 
-    fmt.Println("========================================dcrm_lockOut,fusion account = %s,dcrm from = %s,dcrm to = %s,value = %s,cointype = %s,groupid = %s,threshold = %s,mode =%s,nonce = %v ====================================",from.Hex(),dcrmaddr,dcrmto,value,cointype,groupid,threshold,mode,Nonce)
     if from.Hex() == "" || dcrmaddr == "" || dcrmto == "" || cointype == "" || value == "" || groupid == "" || threshold == "" || mode == "" {
 	return "","parameter error from raw data,maybe raw data error",fmt.Errorf("param error.")
     }
 
     ///////bug
     key2 := dev.Keccak256Hash([]byte(strings.ToLower(from.Hex() + ":" + groupid + ":" + fmt.Sprintf("%v",Nonce) + ":" + dcrmaddr + ":" + threshold))).Hex()
+    fmt.Println("========================================LockOut,fusion account = %s,dcrm from = %s,dcrm to = %s,value = %s,cointype = %s,groupid = %s,threshold = %s,mode =%s,nonce = %v,key=%s ====================================",from.Hex(),dcrmaddr,dcrmto,value,cointype,groupid,threshold,mode,Nonce,key2)
+    
     var da []byte
     datmp,exsit := dev.LdbLockOut.ReadMap(key2)
     if exsit == false {
@@ -919,7 +917,7 @@ func LockOut(raw string) (string,string,error) {
 	    if err == nil {
 		ac := dss.(*dev.AcceptLockOutData)
 		if ac != nil && strings.EqualFold(ac.Status, "Pending") {
-		    fmt.Println("===================!!!!dcrm_lockOut,this lockout has already handle,acc =%s,groupid =%s,nonce =%v,dcrmfrom =%s,threshold =%s,key =%s!!!!============================",from.Hex(),groupid,Nonce,dcrmaddr,threshold,key2)
+		    fmt.Println("===================!!!!LockOut,this lockout has already handle,acc =%s,groupid =%s,nonce =%v,dcrmfrom =%s,threshold =%s,key =%s!!!!============================",from.Hex(),groupid,Nonce,dcrmaddr,threshold,key2)
 		    return "","the lockout has already handle,status is pending",fmt.Errorf("the lockout has already handle,status is pending.")
 		}
 	    }
@@ -947,7 +945,6 @@ func LockOut(raw string) (string,string,error) {
     go func() {
 	for i:=0;i<1;i++ {
 	    msg := from.Hex() + ":" + dcrmaddr + ":" + dcrmto + ":" + value + ":" + cointype + ":" + groupid + ":" + fmt.Sprintf("%v",Nonce) + ":" + threshold + ":" + mode
-	    fmt.Println("========================================dcrm_lockOut,value = %s,cointype = %s,nonce = %v ====================================",value,cointype,Nonce)
 	    txhash,_,err2 := SendReqToGroup(msg,"rpc_lockout")
 	    if err2 == nil && txhash != "" {
 		return
@@ -957,10 +954,9 @@ func LockOut(raw string) (string,string,error) {
 	}
     }()
     
-    key := dev.Keccak256Hash([]byte(strings.ToLower(from.Hex() + ":" + groupid + ":" + fmt.Sprintf("%v",Nonce) + ":" + dcrmaddr + ":" + threshold))).Hex()
-    fmt.Println("===================LockOut,return key=%s======================",key)
+    fmt.Println("===================LockOut,return key=%s======================",key2)
 
-    return key,"",nil
+    return key2,"",nil
 }
 
 func GetReqAddrStatus(key string) (string,string,error) {

@@ -77,7 +77,7 @@ var (
 
 const (
 	SendWaitTime = 3 * time.Second
-	SendTime = 5
+	SendTime = 10
 	pingCount = 10
 
 	Dcrmprotocol_type = iota + 1
@@ -375,21 +375,23 @@ func (t *udp) udpSendMsg(toid NodeID, toaddr *net.UDPAddr, msg string, number [3
 	go func() {
 		sendCount := 0
 		go func() {
-			SendWaitTimeOut := time.NewTicker(SendWaitTime)
-			select {
-			case <-SendWaitTimeOut.C:
-				if stopTimer == true || sendCount >= SendTime {
-					timeout = true
-					return
+			for {
+				SendWaitTimeOut := time.NewTicker(SendWaitTime)
+				select {
+				case <-SendWaitTimeOut.C:
+					if stopTimer == true || sendCount >= SendTime {
+						timeout = true
+						break
+					}
+					if ret == true {
+						_, errs := t.send(toaddr, byte(getPacket), req)
+						fmt.Printf("==== (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, errs: %v, ret dcrmmessage\n", toaddr, s, errs)
+					} else {
+						_, errs := t.send(toaddr, byte(getPacket), reqGet)
+						fmt.Printf("==== (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, errs: %v, getdcrmmessage\n", toaddr, s, errs)
+					}
+					sendCount += 1
 				}
-				if ret == true {
-					_, errs := t.send(toaddr, byte(getPacket), req)
-					fmt.Printf("==== (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, errs: %v, ret dcrmmessage\n", toaddr, s, errs)
-				} else {
-					_, errs := t.send(toaddr, byte(getPacket), reqGet)
-					fmt.Printf("==== (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, errs: %v, getdcrmmessage\n", toaddr, s, errs)
-				}
-				sendCount += 1
 			}
 		}()
 		for {
@@ -554,7 +556,7 @@ func (req *dcrmmessage) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []b
        //if expired(req.Expiration) {
        //        return errExpired
        //}
-	fmt.Printf("send ack ==== (req *dcrmmessage) handle() ====, to: %v, mac: %v\n", from, mac)
+	fmt.Printf("send ack ==== (req *dcrmmessage) handle() ====, to: %v, sequence: %v\n", from, req.Sequence)
 	t.send(from, byte(Ack_Packet), &Ack{
 		Sequence: req.Sequence,
 		Expiration: uint64(time.Now().Add(expiration).Unix()),

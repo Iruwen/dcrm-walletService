@@ -21,6 +21,7 @@ import (
 	"compress/zlib"
 	"encoding/json"
 	"errors"
+	"hash/crc32"
 	"fmt"
 	"io"
 	"math/rand"
@@ -152,6 +153,7 @@ type (
 		P2pType    byte
 		Target     NodeID // doesn't need to be an actual public key
 		Msg        string
+		Hash       uint64
 		Sequence   uint64
 		Expiration uint64
 	}
@@ -162,6 +164,7 @@ type (
 		Target     NodeID // doesn't need to be an actual public key
 		P2pType    byte
 		Msg        string
+		Hash       uint64
 		Sequence   uint64
 		Expiration uint64
 	}
@@ -354,11 +357,13 @@ func (t *udp) udpSendMsg(toid NodeID, toaddr *net.UDPAddr, msg string, number [3
 	} else {
 		getPacket = getCCPacket(p2pType)
 	}
+	msgCRC := CRC32(msg)
 	reqGet := &getdcrmmessage{
 		Target:     toid,
 		Number:     number,
 		P2pType:    byte(p2pType),
 		Msg:        msg,
+		Hash:       uint64(msgCRC),
 		Sequence:   s,
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
 	}
@@ -367,6 +372,7 @@ func (t *udp) udpSendMsg(toid NodeID, toaddr *net.UDPAddr, msg string, number [3
 		Number:     number,
 		P2pType:    byte(p2pType),
 		Msg:        msg,
+		Hash:       uint64(msgCRC),
 		Sequence:   s,
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
 	}
@@ -481,6 +487,11 @@ func (req *getdcrmmessage) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac 
                // (which is a much bigger packet than findnode) to the victim.
                return errUnknownNode
        }
+	msgCRC := CRC32(req.Msg)
+	if uint64(msgCRC) != req.Hash {
+		fmt.Printf("==== (req *getdcrmmessage) handle() ====, from: %v, sequence: %v, CRC error\n", from, req.Sequence)
+		return errors.New("CRC error")
+	}
 	fmt.Printf("send ack ==== (req *getdcrmmessage) handle() ====, to: %v, sequence: %v\n", from, req.Sequence)
 	t.send(from, byte(Ack_Packet), &Ack{
 		Sequence: req.Sequence,
@@ -556,6 +567,11 @@ func (req *dcrmmessage) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []b
        //if expired(req.Expiration) {
        //        return errExpired
        //}
+	msgCRC := CRC32(req.Msg)
+	if uint64(msgCRC) != req.Hash {
+		fmt.Printf("==== (req *dcrmmessage) handle() ====, from: %v, sequence: %v, CRC error\n", from, req.Sequence)
+		return errors.New("CRC error")
+	}
 	fmt.Printf("send ack ==== (req *dcrmmessage) handle() ====, to: %v, sequence: %v\n", from, req.Sequence)
 	t.send(from, byte(Ack_Packet), &Ack{
 		Sequence: req.Sequence,
@@ -1648,3 +1664,8 @@ func homeDir() string {
 	}
 	return ""
 }
+
+func CRC32(str string) uint32{
+	return crc32.ChecksumIEEE([]byte(str))
+}
+

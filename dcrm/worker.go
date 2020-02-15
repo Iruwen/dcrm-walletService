@@ -1178,6 +1178,8 @@ func DcrmCall(msg interface{},enode string) <-chan string {
     if rr.MsgType == "rpc_req_dcrmaddr" {
     }*/
     ////////
+    test := Keccak256Hash([]byte(strings.ToLower(s))).Hex()
+    fmt.Println("===================DcrmCall,msg hash =%s=====================",test)
 
     v := RecvMsg{msg:s,sender:enode}
     rch := make(chan interface{},1)
@@ -2067,6 +2069,9 @@ func (self *RecvMsg) Run(workid int,ch chan interface{}) bool {
 	return false 
     }
 
+    test := Keccak256Hash([]byte(strings.ToLower(res))).Hex()
+    fmt.Println("===================RecvMsg.Run,msg hash =%s=====================",test)
+    
     ////
     msgdata,errdec := DecryptMsg(res) //for SendMsgToPeer
     if errdec == nil {
@@ -2703,6 +2708,7 @@ func Decode2(s string,datatype string) (interface{},error) {
 	var m SendMsg
 	err := json.Unmarshal([]byte(s), &m)
 	if err != nil {
+	    fmt.Println("================Decode2,json Unmarshal err =%v===================",err)
 	    return nil,err
 	}
 
@@ -2837,6 +2843,8 @@ func (self *ReqAddrSendMsgToDcrm) Run(workid int,ch chan interface{}) bool {
     tt := strconv.Itoa(int(timestamp))
     nonce := Keccak256Hash([]byte(msg + ":" + tt + ":" + strconv.Itoa(workid))).Hex()
     
+    keytest := Keccak256Hash([]byte(strings.ToLower(self.Account + ":" + self.Cointype + ":" + self.GroupId + ":" + self.Nonce + ":" + self.LimitNum + ":" + self.Mode))).Hex()
+    
     sm := &SendMsg{MsgType:"rpc_req_dcrmaddr",Nonce:nonce,WorkId:workid,Msg:msg}
     res,err := Encode2(sm)
     if err != nil {
@@ -2855,6 +2863,8 @@ func (self *ReqAddrSendMsgToDcrm) Run(workid int,ch chan interface{}) bool {
     w := workers[workid]
 
     for i:=0;i<ReSendTimes;i++ {
+	test := Keccak256Hash([]byte(strings.ToLower(res))).Hex()
+	fmt.Println("===================ReqAddrSendMsgToDcrm.Run,msg hash =%s,key=%s=====================",test,keytest)
 	SendToGroupAllNodes(self.GroupId,res)
 	time.Sleep(time.Duration(2)*time.Second) //1000 == 1s
     }
@@ -2865,7 +2875,6 @@ func (self *ReqAddrSendMsgToDcrm) Run(workid int,ch chan interface{}) bool {
 	return false
     }*/
 
-    keytest := Keccak256Hash([]byte(strings.ToLower(self.Account + ":" + self.Cointype + ":" + self.GroupId + ":" + self.Nonce + ":" + self.LimitNum + ":" + self.Mode))).Hex()
     fmt.Println("=============ReqAddrSendMsgToMsg.Run,Waiting For Result,key = %s===========",keytest)
     <-w.acceptWaitReqAddrChan
     time.Sleep(time.Duration(1) * time.Second)
@@ -2911,6 +2920,8 @@ func (self *LockOutSendMsgToDcrm) Run(workid int,ch chan interface{}) bool {
     tt := strconv.Itoa(int(timestamp))
     nonce := Keccak256Hash([]byte(msg + ":" + tt + ":" + strconv.Itoa(workid))).Hex()
     
+    keytest := Keccak256Hash([]byte(strings.ToLower(self.Account + ":" + self.GroupId + ":" + self.Nonce + ":" + self.DcrmFrom + ":" + self.LimitNum))).Hex()
+    
     sm := &SendMsg{MsgType:"rpc_lockout",Nonce:nonce,WorkId:workid,Msg:msg}
     res,err := Encode2(sm)
     if err != nil {
@@ -2927,6 +2938,8 @@ func (self *LockOutSendMsgToDcrm) Run(workid int,ch chan interface{}) bool {
     }
 
     for i:=0;i<ReSendTimes;i++ {
+	test := Keccak256Hash([]byte(strings.ToLower(res))).Hex()
+	fmt.Println("===================LockOutSendMsgToDcrm.Run,msg hash =%s,key=%s=====================",test,keytest)
 	SendToGroupAllNodes(self.GroupId,res)
 	time.Sleep(time.Duration(2)*time.Second) //1000 == 1s
     }
@@ -2940,7 +2953,6 @@ func (self *LockOutSendMsgToDcrm) Run(workid int,ch chan interface{}) bool {
 
     w := workers[workid]
     ////
-    keytest := Keccak256Hash([]byte(strings.ToLower(self.Account + ":" + self.GroupId + ":" + self.Nonce + ":" + self.DcrmFrom + ":" + self.LimitNum))).Hex()
     fmt.Println("=============LockOutSendMsgToDcrm.Run,Waiting For Result,key=%s===========",keytest)
     <-w.acceptWaitLockOutChan
     var tip string

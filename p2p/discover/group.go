@@ -381,6 +381,14 @@ func (t *udp) udpSendMsg(toid NodeID, toaddr *net.UDPAddr, msg string, number [3
 	//go func() {
 		sendCount := 0
 		go func() {
+			if ret == true {
+				_, errs := t.send(toaddr, byte(getPacket), req)
+				fmt.Printf("==== (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, errs: %v, ret dcrmmessage\n", toaddr, s, errs)
+			} else {
+				_, errs := t.send(toaddr, byte(getPacket), reqGet)
+				fmt.Printf("==== (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, errs: %v, getdcrmmessage\n", toaddr, s, errs)
+			}
+			sendCount += 1
 			for {
 				SendWaitTimeOut := time.NewTicker(SendWaitTime)
 				select {

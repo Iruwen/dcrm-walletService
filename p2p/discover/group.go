@@ -522,13 +522,17 @@ func (req *getdcrmmessage) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac 
        if num[2] > 1 {
 		tmpdcrmmsgLock.Lock()
 		if tmpdcrmmsg[fromID] == nil {
-			tmpdcrmmsg[fromID] = &getdcrmmessage{Number: [3]byte{0, 0, 0}, Msg: ""}
+			tmpdcrmmsg[fromID] = new(getdcrmmessage)
 		}
                if tmpdcrmmsg[fromID].Number[0] == 0 || num[0] != tmpdcrmmsg[fromID].Number[0] {
                        tmpdcrmmsg[fromID] = &(*req)
+			fmt.Printf("==== (req *getdcrmmessage) handle() ====, from: %v, req.Sequence: %v tmpdcrmmsg[fromID] new\n", from, req.Sequence)
+			tmpdcrmmsgLock.Unlock()
                        return nil
                }
                if tmpdcrmmsg[fromID].Number[1] == num[1] {
+			fmt.Printf("==== (req *getdcrmmessage) handle() ====, from: %v, req.Sequence: %v tmpdcrmmsg[fromID] same num[1]\n", from, req.Sequence)
+			tmpdcrmmsgLock.Unlock()
                        return nil
                }
                var buffer bytes.Buffer

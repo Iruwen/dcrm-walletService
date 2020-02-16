@@ -537,7 +537,7 @@ func (req *getdcrmmessage) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac 
                msgp = buffer.String()
        }
 
-       go func() {
+       //go func() {
 		lenm := len(msgp)
 		if lenm >= 100 {
 			lenm = 100
@@ -553,8 +553,9 @@ func (req *getdcrmmessage) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac 
 		_, err := t.udpSendMsg(fromID, from, msg, number, int(req.P2pType), true)
 	       if err != nil {
 			fmt.Printf("dcrm handle, send to target: %v, from: %v, msg(len = %v), err: %v\n", fromID, from, len(msg), err)
+			return err
 	       }
-       }()
+       //}()
        return nil
 }
 

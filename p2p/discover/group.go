@@ -46,7 +46,8 @@ var (
 	Dcrmdelimiter  = "dcrmmsg"
 	Dcrm_groupList *Group
 	Xp_groupList   *Group
-	tmpdcrmmsg     = &getdcrmmessage{Number: [3]byte{0, 0, 0}, Msg: ""}
+	tmpdcrmmsg map[NodeID]*getdcrmmessage = make(map[NodeID]*getdcrmmessage)
+	tmpdcrmmsgLock sync.Mutex
 	setlocaliptrue = false
 	localIP        = "127.0.0.1"
 	RemoteIP       net.IP
@@ -500,7 +501,7 @@ func (req *getdcrmmessage) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac 
 		fmt.Printf("==== (req *getdcrmmessage) handle() ====, from: %v, sequence: %v, CRC error\n", from, req.Sequence)
 		return errors.New("CRC error")
 	}
-	fmt.Printf("send ack ==== (req *getdcrmmessage) handle() ====, to: %v, sequence: %v\n", from, req.Sequence)
+	fmt.Printf("send ack ==== (req *getdcrmmessage) handle() ====, from: %v, fromID: %v, sequence: %v\n", from, fromID, req.Sequence)
 	t.send(from, byte(Ack_Packet), &Ack{
 		Sequence: req.Sequence,
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
@@ -519,21 +520,26 @@ func (req *getdcrmmessage) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac 
        msgp := req.Msg
        num := req.Number
        if num[2] > 1 {
-               if tmpdcrmmsg.Number[0] == 0 || num[0] != tmpdcrmmsg.Number[0] {
-                       tmpdcrmmsg = &(*req)
+		tmpdcrmmsgLock.Lock()
+		if tmpdcrmmsg[fromID] == nil {
+			tmpdcrmmsg[fromID] = &getdcrmmessage{Number: [3]byte{0, 0, 0}, Msg: ""}
+		}
+               if tmpdcrmmsg[fromID].Number[0] == 0 || num[0] != tmpdcrmmsg[fromID].Number[0] {
+                       tmpdcrmmsg[fromID] = &(*req)
                        return nil
                }
-               if tmpdcrmmsg.Number[1] == num[1] {
+               if tmpdcrmmsg[fromID].Number[1] == num[1] {
                        return nil
                }
                var buffer bytes.Buffer
-               if tmpdcrmmsg.Number[1] < num[1] {
-                       buffer.WriteString(tmpdcrmmsg.Msg)
+               if tmpdcrmmsg[fromID].Number[1] < num[1] {
+                       buffer.WriteString(tmpdcrmmsg[fromID].Msg)
                        buffer.WriteString(req.Msg)
                } else {
                        buffer.WriteString(req.Msg)
-                       buffer.WriteString(tmpdcrmmsg.Msg)
+                       buffer.WriteString(tmpdcrmmsg[fromID].Msg)
                }
+		tmpdcrmmsgLock.Unlock()
                msgp = buffer.String()
        }
 

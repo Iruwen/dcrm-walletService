@@ -79,7 +79,7 @@ var (
 
 const (
 	SendWaitTime = 3 * time.Second
-	SendTime = 10
+	SendTime = 20
 	pingCount = 10
 
 	Dcrmprotocol_type = iota + 1
@@ -406,12 +406,13 @@ func (t *udp) udpSendMsg(toid NodeID, toaddr *net.UDPAddr, msg string, number [3
 						fmt.Printf("==== (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, errs: %v, getdcrmmessage\n", toaddr, s, errs)
 					}
 					sendCount += 1
+					break
 				}
 			}
 		}()
 		for {
 			if timeout == true {
-				fmt.Printf("====  (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, err: timeout\n", s, toaddr)
+				fmt.Printf("====  (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, err: timeout\n", toaddr, s)
 				break
 			}
 			CheckAckLock.Lock()
@@ -423,7 +424,7 @@ func (t *udp) udpSendMsg(toid NodeID, toaddr *net.UDPAddr, msg string, number [3
 				fmt.Printf("====  (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, SUCCESS\n", toaddr, s)
 				break
 			}
-			time.Sleep(time.Duration(200) * time.Millisecond)
+			time.Sleep(time.Duration(2) * time.Second)
 
 		}
 	//}()
@@ -435,13 +436,13 @@ func (t *udp) udpSendMsg(toid NodeID, toaddr *net.UDPAddr, msg string, number [3
 
 func (req *Ack) name() string { return "ACK/v4" }
 func (req *Ack) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte) error {
-	if expired(req.Expiration) {
-		return errExpired
-	}
-	fmt.Printf("====  (req *Ack) handle  ====, recv ack from: %v, sequence: %v\n", from, req.Sequence)
+	//if expired(req.Expiration) {
+	//	return errExpired
+	//}
 	CheckAckLock.Lock()
 	recvAck[req.Sequence] = 1
 	CheckAckLock.Unlock()
+	fmt.Printf("====  (req *Ack) handle  ====, recv ack from: %v, sequence: %v\n", from, req.Sequence)
 	if !t.handleReply(fromID, byte(Ack_Packet), req) {
 		fmt.Printf("====  (req *Ack) handle  ====, handleReply, toaddr: %v\n", from)
 	}

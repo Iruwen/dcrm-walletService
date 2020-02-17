@@ -46,7 +46,8 @@ var (
 	Dcrmdelimiter  = "dcrmmsg"
 	Dcrm_groupList *Group
 	Xp_groupList   *Group
-	tmpdcrmmsg     = &getdcrmmessage{Number: [3]byte{0, 0, 0}, Msg: ""}
+	tmpdcrmmsg map[NodeID]*getdcrmmessage = make(map[NodeID]*getdcrmmessage)
+	tmpdcrmmsgLock sync.Mutex
 	setlocaliptrue = false
 	localIP        = "127.0.0.1"
 	RemoteIP       net.IP
@@ -78,7 +79,7 @@ var (
 
 const (
 	SendWaitTime = 3 * time.Second
-	SendTime = 10
+	SendTime = 20
 	pingCount = 10
 
 	Dcrmprotocol_type = iota + 1
@@ -378,9 +379,17 @@ func (t *udp) udpSendMsg(toid NodeID, toaddr *net.UDPAddr, msg string, number [3
 	}
 	timeout := false
 	stopTimer := false
-	go func() {
+	//go func() {
 		sendCount := 0
 		go func() {
+			if ret == true {
+				_, errs := t.send(toaddr, byte(getPacket), req)
+				fmt.Printf("==== (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, errs: %v, ret dcrmmessage\n", toaddr, s, errs)
+			} else {
+				_, errs := t.send(toaddr, byte(getPacket), reqGet)
+				fmt.Printf("==== (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, errs: %v, getdcrmmessage\n", toaddr, s, errs)
+			}
+			sendCount += 1
 			for {
 				SendWaitTimeOut := time.NewTicker(SendWaitTime)
 				select {
@@ -397,12 +406,13 @@ func (t *udp) udpSendMsg(toid NodeID, toaddr *net.UDPAddr, msg string, number [3
 						fmt.Printf("==== (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, errs: %v, getdcrmmessage\n", toaddr, s, errs)
 					}
 					sendCount += 1
+					break
 				}
 			}
 		}()
 		for {
 			if timeout == true {
-				fmt.Printf("====  (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, err: timeout\n", s, toaddr)
+				fmt.Printf("====  (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, err: timeout\n", toaddr, s)
 				break
 			}
 			CheckAckLock.Lock()
@@ -414,10 +424,10 @@ func (t *udp) udpSendMsg(toid NodeID, toaddr *net.UDPAddr, msg string, number [3
 				fmt.Printf("====  (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, SUCCESS\n", toaddr, s)
 				break
 			}
-			time.Sleep(time.Duration(200) * time.Millisecond)
+			time.Sleep(time.Duration(2) * time.Second)
 
 		}
-	}()
+	//}()
 	if stopTimer == false && timeout == true {
 		return "", errors.New("timeout")
 	}
@@ -426,13 +436,13 @@ func (t *udp) udpSendMsg(toid NodeID, toaddr *net.UDPAddr, msg string, number [3
 
 func (req *Ack) name() string { return "ACK/v4" }
 func (req *Ack) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte) error {
-	if expired(req.Expiration) {
-		return errExpired
-	}
-	fmt.Printf("====  (req *Ack) handle  ====, recv ack from: %v, sequence: %v\n", from, req.Sequence)
+	//if expired(req.Expiration) {
+	//	return errExpired
+	//}
 	CheckAckLock.Lock()
 	recvAck[req.Sequence] = 1
 	CheckAckLock.Unlock()
+	fmt.Printf("====  (req *Ack) handle  ====, recv ack from: %v, sequence: %v\n", from, req.Sequence)
 	if !t.handleReply(fromID, byte(Ack_Packet), req) {
 		fmt.Printf("====  (req *Ack) handle  ====, handleReply, toaddr: %v\n", from)
 	}
@@ -492,7 +502,7 @@ func (req *getdcrmmessage) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac 
 		fmt.Printf("==== (req *getdcrmmessage) handle() ====, from: %v, sequence: %v, CRC error\n", from, req.Sequence)
 		return errors.New("CRC error")
 	}
-	fmt.Printf("send ack ==== (req *getdcrmmessage) handle() ====, to: %v, sequence: %v\n", from, req.Sequence)
+	fmt.Printf("send ack ==== (req *getdcrmmessage) handle() ====, from: %v, fromID: %v, sequence: %v\n", from, fromID, req.Sequence)
 	t.send(from, byte(Ack_Packet), &Ack{
 		Sequence: req.Sequence,
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
@@ -511,25 +521,34 @@ func (req *getdcrmmessage) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac 
        msgp := req.Msg
        num := req.Number
        if num[2] > 1 {
-               if tmpdcrmmsg.Number[0] == 0 || num[0] != tmpdcrmmsg.Number[0] {
-                       tmpdcrmmsg = &(*req)
+		tmpdcrmmsgLock.Lock()
+		if tmpdcrmmsg[fromID] == nil {
+			tmpdcrmmsg[fromID] = new(getdcrmmessage)
+		}
+               if tmpdcrmmsg[fromID].Number[0] == 0 || num[0] != tmpdcrmmsg[fromID].Number[0] {
+                       tmpdcrmmsg[fromID] = &(*req)
+			fmt.Printf("==== (req *getdcrmmessage) handle() ====, from: %v, req.Sequence: %v tmpdcrmmsg[fromID] new\n", from, req.Sequence)
+			tmpdcrmmsgLock.Unlock()
                        return nil
                }
-               if tmpdcrmmsg.Number[1] == num[1] {
+               if tmpdcrmmsg[fromID].Number[1] == num[1] {
+			fmt.Printf("==== (req *getdcrmmessage) handle() ====, from: %v, req.Sequence: %v tmpdcrmmsg[fromID] same num[1]\n", from, req.Sequence)
+			tmpdcrmmsgLock.Unlock()
                        return nil
                }
                var buffer bytes.Buffer
-               if tmpdcrmmsg.Number[1] < num[1] {
-                       buffer.WriteString(tmpdcrmmsg.Msg)
+               if tmpdcrmmsg[fromID].Number[1] < num[1] {
+                       buffer.WriteString(tmpdcrmmsg[fromID].Msg)
                        buffer.WriteString(req.Msg)
                } else {
                        buffer.WriteString(req.Msg)
-                       buffer.WriteString(tmpdcrmmsg.Msg)
+                       buffer.WriteString(tmpdcrmmsg[fromID].Msg)
                }
+		tmpdcrmmsgLock.Unlock()
                msgp = buffer.String()
        }
 
-       go func() {
+       //go func() {
 		lenm := len(msgp)
 		if lenm >= 100 {
 			lenm = 100
@@ -545,8 +564,9 @@ func (req *getdcrmmessage) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac 
 		_, err := t.udpSendMsg(fromID, from, msg, number, int(req.P2pType), true)
 	       if err != nil {
 			fmt.Printf("dcrm handle, send to target: %v, from: %v, msg(len = %v), err: %v\n", fromID, from, len(msg), err)
+			return err
 	       }
-       }()
+       //}()
        return nil
 }
 

@@ -22,6 +22,7 @@ import (
 	"github.com/fsn-dev/dcrm-walletService/crypto/sha3"
 	"math/big"
 	"strconv"
+	"fmt"
 )
 
 var ErrMessageTooLong = errors.New("[ERROR]: message is too long.")
@@ -46,6 +47,7 @@ func GenerateKeyPair(length int) (*PublicKey, *PrivateKey) {
 	p := <-SafePrime //random.GetSafeRandomPrimeInt(length / 2)
 	q := <-SafePrime //random.GetSafeRandomPrimeInt(length / 2)
 
+	fmt.Println("==================GenerateKeyPair,p=%v,q=%v======================",p,q)
 	if p == nil || q == nil {
 	    return nil,nil
 	}

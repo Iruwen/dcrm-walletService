@@ -3,6 +3,7 @@ package ec2
 import (
 	"github.com/fsn-dev/dcrm-walletService/internal/common/math/random"
 	"math/big"
+	"fmt"
 )
 
 type NtildeH1H2 struct {
@@ -16,6 +17,7 @@ func GenerateNtildeH1H2(length int) *NtildeH1H2 {
 	p := <-SafePrime //random.GetSafeRandomPrimeInt(length / 2)
 	q := <-SafePrime //random.GetSafeRandomPrimeInt(length / 2)
 
+	fmt.Println("==================GenerateNtildeH1H2,p=%v,q=%v======================",p,q)
 	if p == nil || q == nil {
 	    return nil
 	}

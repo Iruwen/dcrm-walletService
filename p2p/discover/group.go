@@ -68,8 +68,9 @@ var (
 	SelfID = ""
 	groupSuffix = "p2p-"
 	groupDir = ""
-	recvAck        map[uint64]int = make(map[uint64]int)
-	CheckAckLock   sync.Mutex
+	ca map[NodeID]*checkAck = make(map[NodeID]*checkAck)
+	nodeOnline map[NodeID]*OnLineStatus = make(map[NodeID]*OnLineStatus)
+	sendLock      sync.Mutex
 )
 var (
 	Dcrm_groupMemNum = 0
@@ -77,9 +78,20 @@ var (
 	SDK_groupNum = 0
 )
 
+
+type OnLineStatus struct {
+	Status bool
+	Lock   sync.Mutex
+}
+
+type checkAck struct {
+	recvAck        map[uint64]int
+	CheckAckLock   sync.Mutex
+}
+
 const (
 	SendWaitTime = 3 * time.Second
-	SendTime = 20
+	SendTime = 10
 	pingCount = 10
 
 	Dcrmprotocol_type = iota + 1
@@ -382,6 +394,7 @@ func (t *udp) udpSendMsg(toid NodeID, toaddr *net.UDPAddr, msg string, number [3
 	//go func() {
 		sendCount := 0
 		go func() {
+			sendLock.Lock()
 			if ret == true {
 				_, errs := t.send(toaddr, byte(getPacket), req)
 				fmt.Printf("==== (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, errs: %v, ret dcrmmessage\n", toaddr, s, errs)
@@ -389,6 +402,7 @@ func (t *udp) udpSendMsg(toid NodeID, toaddr *net.UDPAddr, msg string, number [3
 				_, errs := t.send(toaddr, byte(getPacket), reqGet)
 				fmt.Printf("==== (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, errs: %v, getdcrmmessage\n", toaddr, s, errs)
 			}
+			sendLock.Unlock()
 			sendCount += 1
 			for {
 				SendWaitTimeOut := time.NewTicker(SendWaitTime)
@@ -398,6 +412,7 @@ func (t *udp) udpSendMsg(toid NodeID, toaddr *net.UDPAddr, msg string, number [3
 						timeout = true
 						break
 					}
+					sendLock.Lock()
 					if ret == true {
 						_, errs := t.send(toaddr, byte(getPacket), req)
 						fmt.Printf("==== (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, errs: %v, ret dcrmmessage\n", toaddr, s, errs)
@@ -405,6 +420,7 @@ func (t *udp) udpSendMsg(toid NodeID, toaddr *net.UDPAddr, msg string, number [3
 						_, errs := t.send(toaddr, byte(getPacket), reqGet)
 						fmt.Printf("==== (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, errs: %v, getdcrmmessage\n", toaddr, s, errs)
 					}
+					sendLock.Unlock()
 					sendCount += 1
 					break
 				}
@@ -415,14 +431,16 @@ func (t *udp) udpSendMsg(toid NodeID, toaddr *net.UDPAddr, msg string, number [3
 				fmt.Printf("====  (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, err: timeout\n", toaddr, s)
 				break
 			}
-			CheckAckLock.Lock()
-			ack := recvAck[s]
-			CheckAckLock.Unlock()
-			if ack == 1 {
-				sendCount = SendTime
-				stopTimer = true
-				fmt.Printf("====  (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, SUCCESS\n", toaddr, s)
-				break
+			if ca[toid] != nil {
+				ca[toid].CheckAckLock.Lock()
+				ack := ca[toid].recvAck[req.Sequence]
+				ca[toid].CheckAckLock.Unlock()
+				if ack == 1 {
+					sendCount = SendTime
+					stopTimer = true
+					fmt.Printf("====  (t *udp) udpSendMsg()  ====, send toaddr: %v, sequence: %v, SUCCESS\n", toaddr, s)
+					break
+				}
 			}
 			time.Sleep(time.Duration(2) * time.Second)
 
@@ -439,9 +457,13 @@ func (req *Ack) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []byte) err
 	//if expired(req.Expiration) {
 	//	return errExpired
 	//}
-	CheckAckLock.Lock()
-	recvAck[req.Sequence] = 1
-	CheckAckLock.Unlock()
+	if ca[fromID] == nil {
+		ca[fromID] = new(checkAck)
+		ca[fromID].recvAck = make(map[uint64]int)
+	}
+	ca[fromID].CheckAckLock.Lock()
+	ca[fromID].recvAck[req.Sequence] = 1
+	ca[fromID].CheckAckLock.Unlock()
 	fmt.Printf("====  (req *Ack) handle  ====, recv ack from: %v, sequence: %v\n", from, req.Sequence)
 	if !t.handleReply(fromID, byte(Ack_Packet), req) {
 		fmt.Printf("====  (req *Ack) handle  ====, handleReply, toaddr: %v\n", from)
@@ -503,10 +525,12 @@ func (req *getdcrmmessage) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac 
 		return errors.New("CRC error")
 	}
 	fmt.Printf("send ack ==== (req *getdcrmmessage) handle() ====, from: %v, fromID: %v, sequence: %v\n", from, fromID, req.Sequence)
+	sendLock.Lock()
 	t.send(from, byte(Ack_Packet), &Ack{
 		Sequence: req.Sequence,
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
 	})
+	sendLock.Unlock()
 	ss := fmt.Sprintf("get-%v-%v", fromID, req.Sequence)
 	fmt.Printf("==== (req *getdcrmmessage) handle() ====, from: %v, sequence: %v\n", from, req.Sequence)
 	sequenceLock.Lock()
@@ -593,10 +617,12 @@ func (req *dcrmmessage) handle(t *udp, from *net.UDPAddr, fromID NodeID, mac []b
 		return errors.New("CRC error")
 	}
 	fmt.Printf("send ack ==== (req *dcrmmessage) handle() ====, to: %v, sequence: %v\n", from, req.Sequence)
+	sendLock.Lock()
 	t.send(from, byte(Ack_Packet), &Ack{
 		Sequence: req.Sequence,
 		Expiration: uint64(time.Now().Add(expiration).Unix()),
 	})
+	sendLock.Unlock()
 	ss := fmt.Sprintf("%v-%v", fromID, req.Sequence)
 	fmt.Printf("==== (req *dcrmmessage) handle() ====, recvMsg: %v\n", ss)
 	sequenceLock.Lock()
@@ -1089,12 +1115,14 @@ func (t *udp) sendToPeer(gid, toid NodeID, toaddr *net.UDPAddr, msg string, p2pT
 	errc := t.pending(toid, byte(Dcrm_groupInfoPacket), func(r interface{}) bool {
 		return true
 	})
+	sendLock.Lock()
 	_, errt := t.send(toaddr, byte(Dcrm_groupInfoPacket), req)
 	if errt != nil {
 		fmt.Printf("====  (t *udp) sendToPeer()  ====, t.send, toaddr: %v, err: %v\n", toaddr, errt)
 	} else {
 		fmt.Printf("====  (t *udp) sendToPeer()  ====, t.send, toaddr: %v, groupInfo: %v SUCCESS\n", toaddr, req)
 	}
+	sendLock.Unlock()
 	err := <-errc
 	return err
 }
@@ -1352,15 +1380,7 @@ func GetEnodeStatus(enode string) (string, error) {
 	if n.ID.String() == selfid {
 		return "OnLine", nil
 	} else {
-		ipa := &net.UDPAddr{IP: n.IP, Port: int(n.UDP)}
-		for i := 0; i < pingCount; i++ {
-			errp := Table4group.net.ping(n.ID, ipa)
-			if errp == nil {
-			        return "OnLine", nil
-			}
-			time.Sleep(time.Duration(500) * time.Millisecond)
-			continue
-		}
+		return getOnLine(n.ID), nil
 	}
 	return "OffLine", nil
 }
@@ -1687,5 +1707,26 @@ func homeDir() string {
 
 func CRC32(str string) uint32{
 	return crc32.ChecksumIEEE([]byte(str))
+}
+
+func UpdateOnLine(nodeID NodeID, online bool) {
+	if nodeOnline[nodeID] == nil {
+		nodeOnline[nodeID] = new(OnLineStatus)
+	}
+	nodeOnline[nodeID].Lock.Lock()
+	nodeOnline[nodeID].Status = online
+	nodeOnline[nodeID].Lock.Unlock()
+}
+
+func getOnLine(nodeID NodeID) string {
+	if nodeOnline[nodeID] != nil {
+		nodeOnline[nodeID].Lock.Lock()
+		online := nodeOnline[nodeID].Status
+		nodeOnline[nodeID].Lock.Unlock()
+		if online == true {
+			return "OnLine"
+		}
+	}
+	return "OffLine"
 }
 

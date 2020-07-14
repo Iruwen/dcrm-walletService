@@ -1,0 +1,5 @@
+**/.git
+.github
+.git
+!.git/HEAD
+!.git/refs/heads

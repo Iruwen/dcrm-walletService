@@ -16,4 +16,4 @@ chmod 640 $LOGDIR/dcrm-walletservice.log
 [ -e $CONFDIR/dcrm.privatekey ] || gdcrm --genkey $CONFDIR/dcrm.privatekey
 chmod 640 $CONFDIR/dcrm.privatekey
 
-gdcrm --nodekey $CONFDIR/dcrm.privatekey --datadir $DATADIR --log $LOGDIR/dcrm-walletservice.log
+exec gdcrm --nodekey $CONFDIR/dcrm.privatekey --datadir $DATADIR --log $LOGDIR/dcrm-walletservice.log

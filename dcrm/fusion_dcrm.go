@@ -1064,7 +1064,7 @@ func InitAcceptData(raw string,workid int,sender string,ch chan interface{}) err
     }
 
     key,from,nonce,txdata,err := CheckRaw(raw)
-    common.Debug("=====================InitAcceptData,get result from call CheckRaw ================","key",key,"from",from,"err",err)
+    common.Debug("=====================InitAcceptData,get result from call CheckRaw ================","key",key,"from",from,"err",err,"raw",raw)
     if err != nil {
 	common.Debug("===============InitAcceptData,check raw===================","err ",err)
 	res := RpcDcrmRes{Ret: "", Tip: err.Error(), Err: err}
@@ -1634,7 +1634,7 @@ func InitAcceptData(raw string,workid int,sender string,ch chan interface{}) err
 				timeout := make(chan bool, 1)
 				go func(wid int) {
 					cur_enode = discover.GetLocalID().String() //GetSelfEnode()
-					agreeWaitTime := 10 * time.Minute
+					agreeWaitTime := 2 * time.Minute
 					agreeWaitTimeOut := time.NewTicker(agreeWaitTime)
 
 					wtmp2 := workers[wid]
